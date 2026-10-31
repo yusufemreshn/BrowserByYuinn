@@ -1,0 +1,543 @@
+/* Bu dosya, dahili Ayarlar sekmesinin (ve aynı görsel dili paylaşan Kısayollar sayfasının) görsel görünümünü belirler. */
+/* Renk, köşe yuvarlaklığı ve yazı boyutu gibi temel değerler, tokens.css dosyasından gelir, bu dosya sadece Ayarlar sayfasına özel düzen ve bileşen stillerini içerir. */
+/* Tasarım, kullanıcının onayladığı "arama odaklı" yönü izler, üstte tek bir arama kutusu ve kategori sekmeleri, altta kaydırılabilir içerik, en altta ince bir durum çubuğu bulunur. */
+
+@import url("tokens.css"); /* Ortak tema değişkenleri buradan alınır */
+
+#ayarlar-govde {
+    display: flex; /* Başlık, içerik ve durum çubuğunun dikey sıralanması için esnek kutu düzeni kullanılır */
+    flex-direction: column; /* Öğeler yukarıdan aşağıya dizilir */
+    height: 100%; /* Kapsayıcı, tüm sayfa yüksekliğini kaplar */
+}
+
+/* --- Üst başlık: arama kutusu ve kategori sekmeleri --- */
+#ayarlar-hero {
+    flex-shrink: 0; /* Pencere daraldığında başlığın küçülmesi engellenir */
+    display: flex; /* Arama kutusu ile kategori sekmelerinin dikey sıralanması için esnek kutu düzeni kullanılır */
+    flex-direction: column; /* Öğeler yukarıdan aşağıya dizilir */
+    align-items: center; /* İçerik yatayda ortalanır */
+    gap: 18px; /* Arama kutusu ile sekmeler arasına boşluk eklenir */
+    padding: 36px 32px 20px; /* Başlığın kenarlarına boşluk eklenir */
+    border-bottom: 1px solid var(--zemin-2); /* Başlığı içerikten ayıran ince bir çizgi */
+}
+
+#arama-kutusu-sarmalayici {
+    width: 100%; /* Kapsayıcı, mevcut genişliği kullanır */
+    max-width: 560px; /* Ama çok geniş ekranlarda aşırı uzamaması için bir üst sınır konur */
+    display: flex; /* İkon, girdi ve temizleme düğmesinin yan yana durması için esnek kutu düzeni kullanılır */
+    align-items: center; /* Öğeler dikeyde ortalanır */
+    gap: 12px; /* Öğeler arasına boşluk eklenir */
+    background-color: var(--zemin-1); /* Arama kutusunun arka plan rengi */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: var(--radius); /* Köşeler, kullanıcının seçtiği köşe yuvarlaklığına göre yuvarlanır */
+    padding: 14px 16px; /* Kutunun iç boşluğu */
+    transition: border-color 140ms ease, box-shadow 140ms ease; /* Odaklanma geçişi yumuşak olur */
+}
+#arama-kutusu-sarmalayici:focus-within {
+    border-color: color-mix(in srgb, var(--vurgu-rengi) 55%, transparent); /* Arama kutusu odaklandığında kenarlık, vurgu rengine döner */
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--vurgu-rengi) 18%, transparent); /* Kenarlığın etrafında hafif bir vurgu halesi belirir */
+}
+#arama-kutusu-sarmalayici svg {
+    flex-shrink: 0; /* Büyüteç ikonu, kutu daraldığında küçülmez */
+    width: 20px; height: 20px; /* İkonun boyutu */
+    color: var(--metin-soluk); /* İkonun rengi, soluk bir ton olarak ayarlanır */
+}
+#genel-arama {
+    flex: 1; /* Girdi, kalan tüm genişliği kullanır */
+    background: none; /* Tarayıcının varsayılan girdi arka planı kaldırılır, zemin rengi sarmalayıcıdan miras alınır */
+    border: none; /* Varsayılan kenarlık kaldırılır */
+    outline: none; /* Odaklanıldığında tarayıcının eklediği varsayılan dış çizgi kaldırılır */
+    color: var(--metin); /* Yazılan metnin rengi */
+    font-family: inherit; /* Genel yazı tipini miras alır */
+    font-size: 16px; /* Arama kutusu, sayfanın en önemli girdisi olduğu için biraz büyük tutulur */
+}
+#genel-arama::placeholder {
+    color: var(--metin-soluk); /* Örnek metin, soluk bir renkte gösterilir */
+}
+#arama-temizle {
+    display: none; /* Arama kutusu boşken bu düğme tamamen gizlidir */
+    flex-shrink: 0; /* Kutu daraldığında düğmenin küçülmesi engellenir */
+    align-items: center; justify-content: center; /* İçindeki çarpı işareti ortalanır */
+    width: 22px; height: 22px; /* Düğmenin boyutu */
+    border: none; /* Varsayılan kenarlık kaldırılır */
+    border-radius: 6px; /* Hafif yuvarlak köşeler */
+    background-color: var(--zemin-3); /* Düğmenin arka plan rengi */
+    color: var(--metin-soluk); /* Çarpı işaretinin rengi */
+    font-size: 11px; /* Çarpı işaretinin boyutu */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+}
+#arama-temizle.gorunur {
+    display: flex; /* Arama kutusunda metin varken, settings.js bu sınıfı ekleyip düğmeyi görünür yapar */
+}
+#arama-temizle:hover {
+    background-color: var(--zemin-4); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+}
+
+#kategori-menu {
+    display: flex; /* Kategori sekmeleri yan yana dizilir */
+    flex-wrap: nowrap; /* Sekmeler her zaman tek satırda kalır, asla alt satıra kırılmaz */
+    justify-content: safe center; /* Sekmeler normalde ortalanır, ama pencere daraldığında ve kaydırma gerektiğinde ilk sekmenin erişilemez biçimde kırpılmasını önlemek için sola yaslanmaya döner */
+    gap: 8px; /* Sekmeler arasına boşluk eklenir */
+    width: 100%; /* Kapsayıcı, kendiliğinden daralmaz, başlığın tüm genişliğini kullanır, böylece taşma bu genişliğin içinde yatay kaydırmaya dönüşür */
+    max-width: 100%; /* Sekme grubu, başlığın genişliğini aşmaz */
+    overflow-x: auto; /* Pencere, tüm sekmeleri tek satırda göstermeye yetmeyecek kadar dar olursa, satır kırılmak yerine yatayda kaydırılabilir olur */
+    padding-bottom: 4px; /* Yatay kaydırma çubuğu belirdiğinde sekmelere yapışmaması için küçük bir boşluk bırakılır */
+    scrollbar-width: thin; /* Firefox tabanlı motorlarda ince bir kaydırma çubuğu kullanılır */
+}
+
+.kategori {
+    font-family: inherit; /* Genel yazı tipini miras alır */
+    font-size: 13px; /* Sekme yazısının boyutu */
+    font-weight: 500; /* Sekme yazısı, hafifçe kalın gösterilir */
+    color: var(--metin-soluk); /* Pasif sekmenin rengi, aktiften daha soluk bir ton */
+    background-color: var(--zemin-1); /* Pasif sekmenin arka plan rengi */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: 999px; /* Sekmeler, kullanıcının köşe yuvarlaklığı seçiminden bağımsız olarak hep hap (pill) biçiminde kalır, bu evrensel bir "sekme" biçimidir */
+    padding: 8px 16px; /* Sekmenin iç boşluğu */
+    white-space: nowrap; /* Sekme metni asla alt satıra kırılmaz, uzun isimler ("Gizlilik ve Güvenlik" gibi) tek satırda kalır */
+    flex-shrink: 0; /* Tek satıra sıkıştırıldığında sekmenin daralıp metni ezmesi engellenir, bunun yerine grup yatayda kayar */
+    cursor: pointer; /* Fare sekmenin üzerine geldiğinde el işaretçisi gösterilir */
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease; /* Durum değişiklikleri yumuşak geçişle olur */
+}
+.kategori:hover {
+    background-color: var(--zemin-2); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+    color: var(--metin); /* Yazı rengi belirginleşir */
+}
+.kategori.aktif {
+    background-color: color-mix(in srgb, var(--vurgu-rengi) 16%, var(--zemin-1)); /* Aktif sekme, vurgu renginin hafifçe karıştığı bir tonla doldurulur */
+    border-color: color-mix(in srgb, var(--vurgu-rengi) 50%, transparent); /* Aktif sekmenin kenarlığı vurgu rengine yaklaşır */
+    color: var(--metin); /* Aktif sekmenin yazısı tam belirgin bir renge döner */
+}
+
+/* --- Orta içerik alanı --- */
+#icerik-panel {
+    flex: 1; /* İçerik alanı, kalan tüm dikey alanı kullanır */
+    overflow-y: auto; /* İçerik yüksekliği aşarsa dikey kaydırma çubuğu belirir */
+    padding: 28px 32px 40px; /* İçeriğin kenarlarından boşluk bırakılır */
+}
+
+.panel {
+    display: none; /* Panel varsayılan olarak gizlidir, sadece aktif olan panel gösterilir */
+    flex-direction: column; /* Panelin içindeki kartlar dikey sıralanır */
+    gap: 14px; /* Kartlar arasına boşluk eklenir, böylece ayrı margin tanımlamaya gerek kalmaz */
+    max-width: 720px; /* İçerik, çok geniş ekranlarda aşırı yayılmasın diye bir üst sınır konur */
+    margin: 0 auto; /* İçerik, panel genişliği içinde ortalanır */
+}
+
+.panel.aktif {
+    display: flex; /* Aktif panel, esnek kutu düzeniyle görünür yapılır */
+    animation: panel-belir 140ms ease; /* Panel değişiminde hafif bir belirme animasyonu olur */
+}
+@keyframes panel-belir {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Ayar kartı ve satırları --- */
+.ayarlar-karti {
+    background-color: var(--zemin-1); /* Kartın arka plan rengi */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: var(--radius); /* Köşeler, kullanıcının seçtiği köşe yuvarlaklığına göre yuvarlanır */
+    overflow: hidden; /* İçindeki satırların alt çizgileri, kartın yuvarlak köşelerini taşmaz */
+}
+
+.ayar-satiri {
+    display: flex; /* Etiket ile kontrolün yan yana durması için esnek kutu düzeni kullanılır */
+    align-items: center; /* Öğeler dikeyde ortalanır */
+    justify-content: space-between; /* Etiket sola, kontrol sağa yaslanır */
+    gap: 16px; /* Öğeler arasına boşluk eklenir */
+    padding: 15px 18px; /* Satırın iç boşluğu */
+    border-bottom: 1px solid var(--zemin-2); /* Satırları birbirinden ayıran ince bir çizgi */
+}
+.ayar-satiri:last-child {
+    border-bottom: none; /* Kartın son satırında alt çizgiye gerek yoktur */
+}
+
+.ayar-satiri-genis {
+    flex-direction: column; /* Kontrolü geniş olan satırlarda (renk seçici, segment grubu gibi), etiket ve kontrol alt alta dizilir */
+    align-items: stretch; /* Kontrol, satırın tüm genişliğini kullanabilir */
+    gap: 12px; /* Etiket ile kontrol arasına boşluk eklenir */
+}
+
+.ayar-metin {
+    flex: 1; /* Etiket metni, satırdaki kalan genişliği kullanır */
+    min-width: 0; /* Taşan metnin, esnek kutu düzeninde kapsayıcıyı genişletmesi engellenir */
+}
+.ayar-baslik {
+    font-size: 14px; /* Ayar başlığının yazı boyutu */
+    font-weight: 500; /* Ayar başlığı, hafifçe kalın gösterilir */
+    color: var(--metin); /* Ayar başlığının rengi */
+}
+.ayar-aciklama {
+    font-size: 12.5px; /* Açıklama metninin yazı boyutu */
+    color: var(--metin-soluk); /* Açıklama metni, ana metinden daha soluk bir ton olarak ayarlanır */
+    margin-top: 3px; /* Başlığın altına küçük bir boşluk eklenir */
+    line-height: 1.45; /* Satır yüksekliği, uzun açıklamaların rahat okunmasını sağlar */
+}
+.ayar-deger {
+    font-size: 13px; /* Hakkında panelindeki değerlerin yazı boyutu */
+    color: var(--metin-soluk); /* Değerler, soluk bir renkte gösterilir */
+    flex-shrink: 0; /* Değer metninin daralması engellenir */
+}
+
+.aciklama {
+    color: var(--metin-soluk); /* Açıklama metinleri, ana metinden daha soluk bir ton olarak ayarlanır, Kısayollar sayfası da bu sınıfı kullanır */
+    font-size: 13px; /* Açıklama yazısı, ana metinden biraz küçük gösterilir */
+    margin-bottom: 20px; /* Açıklamanın altına, listeden önce bir boşluk eklenir */
+}
+
+#secim-arama-motoru, #girdi-ana-sayfa, #girdi-site, #girdi-kullanici, #girdi-sifre {
+    height: 36px; /* Giriş kutularının ve seçim kutusunun yüksekliği */
+    padding: 0 14px; /* İç boşluk */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: calc(var(--radius) * 0.7); /* Köşeler, panel köşe yuvarlaklığının biraz daha dar bir oranını kullanır */
+    background-color: var(--zemin-2); /* Arka plan rengi */
+    color: var(--metin); /* Yazılan metnin rengi */
+    font-size: inherit; /* Genel yazı boyutunu miras alır */
+    outline: none; /* Odaklanıldığında tarayıcının eklediği varsayılan dış çizgi kaldırılır */
+    transition: border-color 140ms ease, box-shadow 140ms ease; /* Odaklanma geçişi yumuşak olur */
+}
+#secim-arama-motoru:focus, #girdi-ana-sayfa:focus, #girdi-site:focus, #girdi-kullanici:focus, #girdi-sifre:focus {
+    border-color: color-mix(in srgb, var(--vurgu-rengi) 55%, transparent); /* Odaklanıldığında kenarlık, vurgu rengine döner */
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--vurgu-rengi) 18%, transparent); /* Kenarlığın etrafında hafif bir vurgu halesi belirir */
+}
+#secim-arama-motoru { min-width: 160px; cursor: pointer; } /* Seçim kutusu, en az bu genişlikte tutulur ve tıklanabilir olduğunu belli eder */
+#girdi-ana-sayfa { width: 260px; flex-shrink: 0; } /* Ana sayfa adresi girdisi, seçim kutusuyla aynı mantıkla sabit bir genişlikte tutulur, "width:100%" satırı daraltıp etiketin alt alta kırılmasına sebep oluyordu */
+
+#icerik-panel button:not(.kategori):not(.segment) {
+    padding: 9px 18px; /* Normal butonların iç boşluğu */
+    border: none; /* Varsayılan kenarlık kaldırılır */
+    border-radius: calc(var(--radius) * 0.7); /* Köşeler, panel köşe yuvarlaklığının biraz daha dar bir oranını kullanır */
+    background-color: var(--vurgu-rengi); /* Normal butonlar, seçili vurgu rengiyle doldurulur */
+    color: #ffffff; /* Buton yazısı beyaz olarak ayarlanır */
+    font-size: inherit; /* Genel yazı boyutunu miras alır */
+    font-weight: 500; /* Buton yazısı hafifçe kalın gösterilir */
+    cursor: pointer; /* Fare butonun üzerine geldiğinde el işaretçisi gösterilir */
+    flex-shrink: 0; /* Buton metninin daralması engellenir */
+    transition: transform 80ms ease, filter 120ms ease, background-color 120ms ease; /* Basma ve hover durumları yumuşak geçişle olur */
+}
+#icerik-panel button:not(.kategori):not(.segment):hover {
+    filter: brightness(1.1); /* Fare üzerine geldiğinde buton hafifçe parlar */
+}
+#icerik-panel button:not(.kategori):not(.segment):active {
+    transform: scale(0.96); /* Basıldığında hafif bir küçülme ile dokunsal bir his verir */
+}
+#icerik-panel button.buton-tehlike {
+    background-color: #ef4444; /* Geri alınamaz işlemler (geçmişi silme gibi), kullanıcının seçtiği vurgu renginden bağımsız, sabit bir tehlike rengiyle vurgulanır */
+}
+#icerik-panel button.buton-ikincil {
+    background-color: var(--zemin-3); /* İkincil işlemler, vurgu rengi yerine nötr bir zemin rengiyle gösterilir */
+    color: var(--metin-soluk); /* İkincil butonun yazı rengi, soluk bir ton olarak ayarlanır */
+}
+#icerik-panel button.buton-ikincil:hover {
+    background-color: var(--zemin-4); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+    filter: none; /* İkincil buton, birincil butonlardaki parlama efektini kullanmaz */
+}
+
+/* --- Şifre ekleme formu --- */
+#sifre-ekle-form {
+    display: flex; /* Form alanları yan yana dizilir */
+    flex-wrap: wrap; /* Dar ekranlarda alanlar alt satıra geçebilir */
+    gap: 10px; /* Alanlar arasına boşluk eklenir */
+}
+#sifre-ekle-form input { flex: 1; min-width: 140px; } /* Form girdileri, mevcut genişliği paylaşır */
+
+/* --- Otomatik doldurma paneli: profil ve kart formları --- */
+#profil-form, #kart-ekle-form {
+    display: flex; /* Form alanları yan yana dizilir */
+    flex-wrap: wrap; /* Dar ekranlarda alanlar alt satıra geçebilir */
+    gap: 10px; /* Alanlar arasına boşluk eklenir */
+}
+#profil-form input, #kart-ekle-form input { flex: 1; min-width: 140px; } /* Form girdileri, mevcut genişliği paylaşır */
+
+/* --- Eklentiler paneli: betik ekleme formu --- */
+#betik-ekle-form {
+    display: flex; /* Form alanları alt alta dizilir */
+    flex-direction: column;
+    gap: 10px; /* Alanlar arasına boşluk eklenir */
+    width: 100%;
+}
+#betik-ekle-form textarea {
+    width: 100%; /* Kod kutusu, formun tam genişliğini kullanır */
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid var(--zemin-4);
+    border-radius: calc(var(--radius) * 0.5);
+    background-color: var(--zemin-2);
+    color: var(--metin);
+    font-family: "Cascadia Code", ui-monospace, Consolas, monospace; /* Kod yazıldığı için sabit genişlikli yazı tipi kullanılır */
+    font-size: 12.5px;
+    resize: vertical; /* Kullanıcı, uzun kodlar için kutuyu dikeyde büyütebilir */
+}
+
+/* --- Kısayolları özelleştirme paneli --- */
+.girdi-kisayol {
+    width: 40px; /* Tek harf yazılacağı için küçük, sabit bir genişlik yeterlidir */
+    text-align: center; /* Yazılan harf, kutunun ortasında görünür */
+    text-transform: uppercase; /* Küçük harf yazılsa da büyük harfe çevrilerek gösterilir, tutarlılık için */
+    padding: 6px; /* Kutunun iç boşluğu */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: calc(var(--radius) * 0.5); /* Diğer küçük kontrollerle aynı köşe yuvarlaklığı oranı */
+    background-color: var(--zemin-2); /* Diğer girdilerle aynı arka plan rengi */
+    color: var(--metin); /* Yazılan harfin rengi */
+    font-size: 13px; /* Yazı boyutu */
+    font-family: "Cascadia Code", ui-monospace, Consolas, monospace; /* Tek bir tuş hissi versin diye sabit genişlikli yazı tipi */
+}
+
+/* --- Görünüm paneli: renk seçici --- */
+#renk-secenekleri {
+    display: flex; /* Renk kareleri yan yana dizilir */
+    gap: 10px; /* Kareler arasına boşluk eklenir */
+    align-items: center; /* Öğeler dikeyde ortalanır */
+    flex-wrap: wrap; /* Dar ekranlarda kareler alt satıra geçebilir */
+}
+
+.renk-karesi {
+    width: 28px; height: 28px; /* Her renk karesinin boyutu */
+    border-radius: 50%; /* Renk seçenekleri, köşe yuvarlaklığı ayarından bağımsız olarak hep daire şeklinde kalır, bu evrensel bir "renk noktası" biçimidir */
+    cursor: pointer; /* Fare bir karenin üzerine geldiğinde el işaretçisi gösterilir */
+    border: 2px solid transparent; /* Normalde görünmeyen bir kenarlık, seçili olanı vurgulamak için kullanılır */
+    transition: transform 100ms ease, border-color 100ms ease; /* Seçim ve hover durumları yumuşak geçişle olur */
+}
+.renk-karesi:hover {
+    transform: scale(1.1); /* Fare üzerine geldiğinde renk noktası hafifçe büyür */
+}
+.renk-karesi.secili {
+    border-color: var(--metin); /* Şu anda seçili olan renk karesi, ana metin renginde bir kenarlıkla vurgulanır */
+}
+
+#ozel-renk-girdisi {
+    width: 28px; height: 28px; /* Özel renk seçici kutusunun boyutu, diğer renk noktalarıyla aynı boyutta görünmesi için */
+    padding: 0; /* İç boşluk kaldırılır, renk alanı kutunun tamamını kaplasın diye */
+    border: 2px solid var(--zemin-4); /* İnce bir kenarlık, bu kutunun diğerlerinden farklı (özel) bir seçenek olduğunu ima eder */
+    border-radius: 50%; /* Diğer renk noktalarıyla aynı daire biçimi */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+    background: none; /* Tarayıcının varsayılan renk kutusu arka planı kaldırılır */
+    overflow: hidden; /* Taşan iç renk önizlemesi, dairenin dışına taşmaz */
+}
+#ozel-renk-girdisi::-webkit-color-swatch-wrapper { padding: 0; } /* Renk önizlemesinin kendi iç boşluğu kaldırılır */
+#ozel-renk-girdisi::-webkit-color-swatch { border: none; border-radius: 50%; } /* Renk önizlemesi, dairenin tamamını kaplar */
+
+/* --- Segment (çok seçenekli anahtar) kontrolleri --- */
+.segment-grup {
+    display: flex; /* Segment butonları yan yana dizilir */
+    gap: 6px; /* Butonlar arasına boşluk eklenir */
+    flex-wrap: wrap; /* Dar ekranlarda butonlar alt satıra geçebilir */
+}
+
+.segment {
+    padding: 8px 16px; /* Segment butonlarının iç boşluğu */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: calc(var(--radius) * 0.7); /* Köşeler, panel köşe yuvarlaklığının biraz daha dar bir oranını kullanır */
+    background-color: var(--zemin-2); /* Normal durumdaki arka plan rengi */
+    color: var(--metin-soluk); /* Normal durumdaki yazı rengi */
+    font-size: inherit; /* Genel yazı boyutunu miras alır */
+    cursor: pointer; /* Fare butonun üzerine geldiğinde el işaretçisi gösterilir */
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease; /* Durum değişiklikleri yumuşak geçişle olur */
+}
+.segment:hover {
+    background-color: var(--zemin-3); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+}
+.segment.secili {
+    background-color: color-mix(in srgb, var(--vurgu-rengi) 16%, var(--zemin-2)); /* Seçili segment, vurgu renginin hafifçe karıştığı bir tonla doldurulur */
+    color: var(--metin); /* Seçili segmentin yazısı belirginleşir */
+    border-color: color-mix(in srgb, var(--vurgu-rengi) 45%, transparent); /* Seçili segmentin kenarlığı vurgu rengine yaklaşır */
+}
+
+/* --- Gizlilik paneli: veri kategorisi onay kutuları --- */
+#veri-kategori-secenekleri {
+    display: flex; /* Kategori satırları dikey sıralanır */
+    flex-direction: column; /* Her kategori kendi satırında durur */
+    gap: 10px; /* Satırlar arasına boşluk eklenir */
+}
+.veri-kategori-satiri {
+    display: flex; /* Onay kutusu ile metnin yan yana durması sağlanır */
+    align-items: center; /* Öğeler dikeyde ortalanır */
+    gap: 10px; /* Kutu ile metin arasına boşluk eklenir */
+    font-size: 13px; /* Kategori metninin yazı boyutu */
+    color: var(--metin); /* Kategori metninin rengi */
+    cursor: pointer; /* Fare satırın üzerine geldiğinde el işaretçisi gösterilir */
+}
+.veri-kategori-satiri input[type="checkbox"] {
+    width: 16px; height: 16px; /* Onay kutusunun boyutu */
+    accent-color: var(--vurgu-rengi); /* İşaretlendiğinde, kullanıcının seçtiği vurgu rengini kullanır */
+    cursor: pointer; /* Fare kutunun üzerine geldiğinde el işaretçisi gösterilir */
+}
+
+/* --- Açık/kapalı anahtar (toggle switch) --- */
+.anahtar {
+    position: relative; /* İçindeki kaydırıcının buna göre konumlanması için */
+    display: inline-block; /* Satır içinde, sadece kendi boyutu kadar yer kaplar */
+    width: 38px; height: 22px; /* Anahtarın sabit boyutu */
+    flex-shrink: 0; /* Satır daraldığında anahtarın küçülmesi engellenir */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+}
+.anahtar input[type="checkbox"] {
+    position: absolute; /* Gerçek onay kutusu görünmez ama hâlâ tıklanabilir/odaklanabilir kalır */
+    opacity: 0; /* Tamamen saydam yapılır, görsel olan kısım tamamen .anahtar-kaydirici'dir */
+    width: 100%; height: 100%; /* Tüm anahtar alanını kaplar, böylece her yere tıklamak çalışır */
+    margin: 0; /* Varsayılan kenar boşluğu kaldırılır */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+}
+.anahtar-kaydirici {
+    position: absolute; /* Anahtarın tamamını kaplayacak şekilde konumlanır */
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--zemin-4); /* Kapalıyken nötr bir zemin rengi kullanılır */
+    border-radius: 999px; /* Hap biçimli bir anahtar görünümü */
+    transition: background-color 150ms ease; /* Açılıp kapanma, renk geçişiyle yumuşak olur */
+}
+.anahtar-kaydirici::before {
+    content: ""; /* Boş bir dekoratif öğe, anahtarın içindeki hareketli yuvarlak nokta */
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    border-radius: 50%; /* Tam yuvarlak bir nokta */
+    background-color: #ffffff; /* Nokta, her zeminde de belirgin olsun diye beyaz tutulur */
+    transition: transform 150ms ease; /* Kayma hareketi yumuşak olur */
+}
+.anahtar input[type="checkbox"]:checked + .anahtar-kaydirici {
+    background-color: var(--vurgu-rengi); /* İşaretliyken, anahtarın zemini kullanıcının vurgu rengine döner */
+}
+.anahtar input[type="checkbox"]:checked + .anahtar-kaydirici::before {
+    transform: translateX(16px); /* İşaretliyken, nokta anahtarın sağına kayar */
+}
+
+/* --- Hazır temalar --- */
+.presetler {
+    display: flex; /* Hazır tema kartları yan yana dizilir */
+    gap: 10px; /* Kartlar arasına boşluk eklenir */
+    flex-wrap: wrap; /* Dar ekranlarda kartlar alt satıra geçebilir */
+}
+.preset-karti {
+    display: flex; /* Kart içindeki renk noktası ve ismin yan yana durması sağlanır */
+    align-items: center; /* Öğeler dikeyde ortalanır */
+    gap: 8px; /* Öğeler arasına boşluk eklenir */
+    padding: 10px 14px; /* Kartın iç boşluğu */
+    border-radius: calc(var(--radius) * 0.7); /* Köşeler, panel köşe yuvarlaklığının biraz daha dar bir oranını kullanır */
+    background-color: var(--zemin-2); /* Kartın arka plan rengi */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+    transition: background-color 120ms ease, transform 100ms ease; /* Hover ve basma durumları yumuşak geçişle olur */
+}
+.preset-karti:hover {
+    background-color: var(--zemin-3); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+    transform: translateY(-1px); /* Kart hafifçe yukarı kalkar, tıklanabilir hissi güçlenir */
+}
+.preset-karti .preset-nokta {
+    width: 16px; height: 16px; /* Rengi temsil eden küçük dairenin boyutu */
+    border-radius: 50%; /* Daire biçimi */
+    flex-shrink: 0; /* Kart daraldığında noktanın küçülmesi engellenir */
+}
+.preset-karti .preset-ad {
+    font-size: 13px; /* Hazır tema isminin yazı boyutu */
+    color: var(--metin); /* Hazır tema isminin rengi */
+}
+
+/* --- Liste kartı (geçmiş, hata günlüğü, şifreler) --- */
+.liste-karti {
+    background-color: var(--zemin-1); /* Kartın arka plan rengi */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: var(--radius); /* Köşeler, kullanıcının seçtiği köşe yuvarlaklığına göre yuvarlanır */
+    overflow: hidden; /* İçindeki satırların alt çizgileri, kartın yuvarlak köşelerini taşmaz */
+}
+
+.gecmis-grup-basligi { /* Geçmiş listesinde Bugün/Dün/Geçen Hafta/Daha Eski grup başlıkları */
+    padding: 10px 18px 4px; /* Üstten biraz, alttan az boşluk */
+    font-size: 12px; /* Küçük, ayırt edici bir yazı boyutu */
+    font-weight: 600; /* Başlık vurgusu */
+    color: var(--metin-soluk); /* İkincil metin rengi, satırlardan daha az dikkat çeker */
+    text-transform: uppercase; /* Küçük büyük harflerle yazılır, başlık gibi görünür */
+    letter-spacing: 0.04em; /* Harfler arası hafif boşluk */
+}
+
+.liste-satiri {
+    display: flex; /* Her liste satırındaki öğelerin yan yana durması sağlanır */
+    align-items: center; /* Öğeler dikey olarak ortalanır */
+    gap: 12px; /* Öğeler arasına boşluk eklenir */
+    padding: 12px 18px; /* Satırın iç boşluğu */
+    border-bottom: 1px solid var(--zemin-2); /* Satırları birbirinden ayıran ince bir çizgi */
+    transition: background-color 100ms ease; /* Hover durumu yumuşak geçişle olur */
+}
+.liste-satiri:last-child {
+    border-bottom: none; /* Kartın son satırında alt çizgiye gerek yoktur */
+}
+.liste-satiri:hover {
+    background-color: var(--zemin-2); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+}
+
+.liste-satiri .ana-metin {
+    flex: 1; /* Ana metin, satırdaki kalan tüm genişliği kullanır */
+    overflow: hidden; /* Taşan metin gizlenir */
+    text-overflow: ellipsis; /* Taşan metnin sonuna üç nokta eklenir */
+    white-space: nowrap; /* Metnin alt satıra geçmesi engellenir */
+}
+
+.liste-satiri .ikincil-metin {
+    color: var(--metin-soluk); /* İkincil bilgi (örneğin tarih), ana metinden daha soluk bir tonla gösterilir */
+    font-size: 12px; /* İkincil bilgi, ana metinden daha küçük gösterilir */
+}
+
+.liste-satiri button {
+    padding: 6px 12px; /* Satır içindeki küçük butonların iç boşluğu */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: calc(var(--radius) * 0.5); /* Küçük butonlar, panel köşe yuvarlaklığının daha dar bir oranını kullanır */
+    background-color: var(--zemin-2); /* Normal durumdaki arka plan rengi */
+    color: var(--metin-soluk); /* Normal durumdaki yazı rengi */
+    font-size: 12px; /* Küçük butonların yazı boyutu */
+    cursor: pointer; /* Fare butonun üzerine geldiğinde el işaretçisi gösterilir */
+    transition: background-color 120ms ease; /* Hover durumu yumuşak geçişle olur */
+}
+.liste-satiri button:hover {
+    background-color: var(--zemin-3); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+}
+
+.liste-satiri select {
+    padding: 5px 8px; /* Seçim kutusunun iç boşluğu, butonlarla görsel olarak tutarlı */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: calc(var(--radius) * 0.5); /* Butonlarla aynı köşe yuvarlaklığı oranı */
+    background-color: var(--zemin-2); /* Butonlarla aynı arka plan rengi */
+    color: var(--metin); /* Seçim kutusundaki metnin rengi */
+    font-size: 12px; /* Butonlarla aynı yazı boyutu */
+    font-family: inherit; /* Genel yazı tipini miras alır */
+    flex-shrink: 0; /* Satır daraldığında seçim kutusunun küçülmesi engellenir */
+}
+
+/* Yer imleri panelinde, sürüklenmekte olan satır, taşınırken geride kalan "hayalet" gibi görünmesi için soluklaştırılır */
+.liste-satiri.surukleniyor {
+    opacity: 0.4;
+}
+
+.hata-kodu {
+    font-family: "Cascadia Code", ui-monospace, Consolas, monospace; /* Hata kodları, rakam hizalaması düzgün görünsün diye sabit genişlikli bir yazı tipiyle gösterilir */
+    font-weight: 600; /* Hata kodu, biraz daha kalın gösterilir */
+    color: var(--vurgu-rengi); /* Hata kodu, vurgu renginde gösterilerek dikkat çeker */
+}
+
+/* --- Alt durum çubuğu --- */
+#durum-cubugu {
+    flex-shrink: 0; /* Pencere daraldığında durum çubuğunun küçülmesi engellenir */
+    display: flex; /* Sol ve sağ metinlerin yan yana durması için esnek kutu düzeni kullanılır */
+    align-items: center; /* Öğeler dikeyde ortalanır */
+    justify-content: space-between; /* Durum metni sola, kısayol ipuçları sağa yaslanır */
+    gap: 12px; /* Öğeler arasına boşluk eklenir */
+    padding: 7px 18px; /* Çubuğun iç boşluğu */
+    border-top: 1px solid var(--zemin-2); /* İçerikten ayıran ince bir çizgi */
+    background-color: var(--zemin-1); /* Çubuğun arka plan rengi */
+    font-family: "Cascadia Code", ui-monospace, Consolas, monospace; /* Durum çubuğu, teknik bir araç hissi versin diye sabit genişlikli bir yazı tipiyle gösterilir */
+    font-size: 11.5px; /* Durum çubuğu metninin boyutu */
+    color: var(--metin-soluk); /* Durum çubuğu metninin rengi */
+}
+#durum-kisayollar {
+    display: flex; /* Kısayol ipuçları yan yana dizilir */
+    align-items: center; /* Öğeler dikeyde ortalanır */
+    gap: 6px; /* Öğeler arasına boşluk eklenir */
+}
+#durum-kisayollar kbd {
+    font-family: inherit; /* Durum çubuğunun genel yazı tipini miras alır */
+    font-size: 10.5px; /* Tuş ipucunun boyutu */
+    color: var(--metin-soluk); /* Tuş ipucunun yazı rengi */
+    background-color: var(--zemin-2); /* Tuş ipucunun arka plan rengi */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: 4px; /* Hafif yuvarlak köşeler */
+    padding: 1px 5px; /* Tuş ipucunun iç boşluğu */
+}

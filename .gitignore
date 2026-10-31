@@ -1,0 +1,29 @@
+# Derleme çıktıları (sadece proje köküdeki, thirdparty içindeki x64 klasörü hariç)
+/x64/
+/x86/
+/Debug/
+/Release/
+/tarayici/
+*.obj
+*.ilk
+*.pdb
+*.exe
+*.tlog
+*.log
+
+# Visual Studio yerel dosyaları
+.vs/
+*.vcxproj.user
+*.suo
+*.user
+
+# Claude Code / ajan araçları yerel durumu
+.claude/
+
+# WebView2 SDK (Microsoft'un NuGet paketinden gelir, lisans gereği repoya eklenmez)
+/thirdparty/WebView2/
+
+# Geliştirme süreci notları (iç kullanım, paylaşılmıyor)
+adimlar.md
+yapilanlar.md
+eksikler-plani.md

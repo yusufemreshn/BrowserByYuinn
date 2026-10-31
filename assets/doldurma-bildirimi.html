@@ -1,0 +1,14 @@
+<!-- Bu dosya, bir sayfadaki şifre alanına tıklanınca beliren, kayıtlı hesap önerilerini listeleyen otomatik doldurma panelinin iskeletini oluşturur. -->
+<!-- Bu panel, menü, DevTools ve izin bildirim panelleriyle aynı mimariyi kullanır: BrowserWindow sınıfı tarafından oluşturulan AYRI bir WebView2 denetleyicisinde gösterilir, odaklanılan şifre alanının hemen altında konumlanır. -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Otomatik Doldurma</title> <!-- Bu sayfanın başlığı, kullanıcıya hiç görünmez -->
+    <link rel="stylesheet" href="chrome.css" /> <!-- .doldurma-sayfasi gibi bu panele özel stiller de chrome.css içinde tanımlıdır -->
+</head>
+<body class="doldurma-sayfasi">
+    <div id="doldurma-listesi"></div> <!-- Kayıtlı kullanıcı adı önerilerinin listeleneceği kapsayıcı, native taraftan gelen listeyle doldurulur -->
+    <script src="doldurma-bildirimi.js"></script>
+</body>
+</html>

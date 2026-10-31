@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bu dosya, Visual Studio'nun projeyi nasıl derleyeceğini anlattığı proje dosyasıdır, kodun kendisini içermez, sadece derleme ayarlarını içerir -->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <!-- Hata ayıklama (Debug) modunda, 64 bitlik bir derleme yapılacağı tanımlanır -->
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <!-- Son kullanıcıya dağıtılacak (Release) modunda, 64 bitlik bir derleme yapılacağı tanımlanır -->
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <!-- Projenin benzersiz kimliği, Visual Studio bu numarayla projeyi tanır -->
+    <ProjectGuid>{B6B6E2A1-6E2C-4C2D-9A5F-1E2F3A4B5C6D}</ProjectGuid>
+    <!-- Projenin ismi, çıkan program dosyasının adı da bu olacaktır -->
+    <RootNamespace>tarayici</RootNamespace>
+    <!-- Derleme için kullanılacak Windows SDK sürümü, kurulu olan en güncel sürüm kullanılır -->
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <!-- Bu satır, projenin genel C++ ayarlarını Visual Studio'nun kendi standart dosyasından alır -->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <!-- Çıkacak programın bir çalıştırılabilir dosya (.exe) olacağı belirtilir -->
+    <ConfigurationType>Application</ConfigurationType>
+    <!-- Kullanılacak derleyici araç setinin sürümü, bu bilgisayarda kurulu olan Visual Studio 18 araç setidir -->
+    <PlatformToolset>v145</PlatformToolset>
+    <!-- Programın yazı karakteri setinin Unicode olacağı belirtilir, Türkçe karakterlerin düzgün çalışması için gereklidir -->
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+
+  <!-- Bu satır, C++ derleyicisinin genel ayarlarını Visual Studio'nun kendi standart dosyasından alır -->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <!-- Hata ayıklama modu için özel ayarlar, bu modda hata ayıklama bilgileri korunur, kod optimize edilmez -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+
+  <!-- Dağıtım modu için özel ayarlar, bu modda kod hız için optimize edilir, hata ayıklama bilgisi tutulmaz -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+
+  <!-- Hata ayıklama modundaki derleyici ve bağlayıcı ayarları burada tanımlanır -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <!-- Bu modda kod optimize edilmez, çünkü amaç hızlı değil, hata ayıklaması kolay bir derleme almaktır -->
+      <Optimization>Disabled</Optimization>
+      <!-- Programın pencere tabanlı (konsolsuz) bir uygulama olduğu derleyiciye bildirilir -->
+      <SubSystem>Windows</SubSystem>
+      <!-- Unicode ile çalışıldığı derleyiciye tanımlı sabitler olarak bildirilir -->
+      <PreprocessorDefinitions>_DEBUG;UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <!-- Kullanılacak C++ dil standardının sürümü belirtilir -->
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <!-- WebView2 kütüphanesinin başlık dosyasının (WebView2.h) bulunduğu klasör, derleyiciye ekstra bir arama yeri olarak bildirilir -->
+      <AdditionalIncludeDirectories>$(ProjectDir)thirdparty\WebView2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <!-- Programın pencere tabanlı bir uygulama olarak bağlanacağı bağlayıcıya bildirilir, böylece siyah bir konsol penceresi açılmaz -->
+      <SubSystem>Windows</SubSystem>
+      <!-- WebView2 kütüphanesinin derlenmiş dosyasının (WebView2LoaderStatic.lib) bulunduğu klasör, bağlayıcıya ekstra bir arama yeri olarak bildirilir -->
+      <AdditionalLibraryDirectories>$(ProjectDir)thirdparty\WebView2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <!-- WebView2 kütüphanesinin derlenmiş dosyası, programa eklenmesi gereken ekstra bir bağımlılık olarak bildirilir -->
+      <!-- crypt32.lib, şifre yöneticisinin DPAPI şifreleme fonksiyonlarını (CryptProtectData, CryptUnprotectData) kullanabilmesi için eklenir -->
+      <!-- winhttp.lib, gömülü DevTools panelinin doğru sekmeyi bulmak için WebView2'nin yerel hata ayıklama (remote debugging) adresine HTTP isteği atabilmesi için eklenir -->
+      <!-- oleaut32.lib, sertifika hatası panelinin sertifika geçerlilik tarihlerini (OLE otomasyon tarihi biçiminde) okunabilir bir tarihe çevirmek için eklenir -->
+      <AdditionalDependencies>WebView2LoaderStatic.lib;crypt32.lib;winhttp.lib;oleaut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- Dağıtım modundaki derleyici ve bağlayıcı ayarları burada tanımlanır -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <!-- Bu modda kod, en yüksek hız için optimize edilir, çünkü amaç performans odaklı bir program çıkarmaktır -->
+      <Optimization>MaxSpeed</Optimization>
+      <!-- Fonksiyonların birden fazla yerde kullanılan ortak kısımlarının, dosyalar arasında da birleştirilmesine izin verilir, bu programı daha hızlı ve küçük yapar -->
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SubSystem>Windows</SubSystem>
+      <!-- Unicode ile çalışıldığı derleyiciye tanımlı sabitler olarak bildirilir -->
+      <PreprocessorDefinitions>NDEBUG;UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <!-- Kullanılmayan fonksiyonların derlenmiş program dosyasından çıkarılmasını sağlar, bu da programı daha hafif yapar -->
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <!-- WebView2 kütüphanesinin başlık dosyasının bulunduğu klasör, derleyiciye ekstra bir arama yeri olarak bildirilir -->
+      <AdditionalIncludeDirectories>$(ProjectDir)thirdparty\WebView2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <!-- Son programda hiç kullanılmayan kod parçalarının bağlayıcı tarafından atılmasını sağlar, programı daha hafif yapar -->
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <!-- WebView2 kütüphanesinin derlenmiş dosyasının bulunduğu klasör, bağlayıcıya ekstra bir arama yeri olarak bildirilir -->
+      <AdditionalLibraryDirectories>$(ProjectDir)thirdparty\WebView2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <!-- WebView2 kütüphanesinin derlenmiş dosyası, programa eklenmesi gereken ekstra bir bağımlılık olarak bildirilir -->
+      <!-- crypt32.lib, şifre yöneticisinin DPAPI şifreleme fonksiyonlarını (CryptProtectData, CryptUnprotectData) kullanabilmesi için eklenir -->
+      <!-- winhttp.lib, gömülü DevTools panelinin doğru sekmeyi bulmak için WebView2'nin yerel hata ayıklama (remote debugging) adresine HTTP isteği atabilmesi için eklenir -->
+      <!-- oleaut32.lib, sertifika hatası panelinin sertifika geçerlilik tarihlerini (OLE otomasyon tarihi biçiminde) okunabilir bir tarihe çevirmek için eklenir -->
+      <AdditionalDependencies>WebView2LoaderStatic.lib;crypt32.lib;winhttp.lib;oleaut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- Projeye dahil edilen kaynak kod dosyalarının listesi burada tutulur -->
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\BrowserWindow.cpp" />
+    <ClInclude Include="src\BrowserWindow.h" />
+    <ClCompile Include="src\Storage.cpp" />
+    <ClInclude Include="src\Storage.h" />
+    <ClCompile Include="src\Logger.cpp" />
+    <ClInclude Include="src\Logger.h" />
+    <ClInclude Include="src\JsonYardimci.h" />
+    <ClInclude Include="src\VeriYolu.h" />
+    <ClCompile Include="src\Settings.cpp" />
+    <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\Base64Yardimci.h" />
+    <ClCompile Include="src\PasswordVault.cpp" />
+    <ClInclude Include="src\PasswordVault.h" />
+    <ClCompile Include="src\AutofillVault.cpp" />
+    <ClInclude Include="src\AutofillVault.h" />
+    <ClCompile Include="src\UserScriptVault.cpp" />
+    <ClInclude Include="src\UserScriptVault.h" />
+    <ClCompile Include="src\GuvenlikDogrulama.cpp" />
+    <ClInclude Include="src\GuvenlikDogrulama.h" />
+    <ClCompile Include="src\PermissionVault.cpp" />
+    <ClInclude Include="src\PermissionVault.h" />
+    <ClCompile Include="src\Engelleyici.cpp" />
+    <ClInclude Include="src\Engelleyici.h" />
+    <ClInclude Include="src\Utf8Yardimci.h" />
+  </ItemGroup>
+
+  <!-- Derleme her bittiğinde, toolbar arayüzünün HTML/CSS/JS dosyalarını içeren assets klasörünün, çıkan programın yanına kopyalanmasını sağlayan adım burada tanımlanır -->
+  <ItemDefinitionGroup>
+    <PostBuildEvent>
+      <!-- xcopy komutu, assets klasöründeki her şeyi, programın çıktığı klasördeki assets klasörüne, sadece değişen dosyaları güncelleyerek kopyalar -->
+      <Command>xcopy /Y /E /I "$(ProjectDir)assets" "$(OutDir)assets"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+
+  <!-- Bu satır, C++ derleme hedeflerini Visual Studio'nun kendi standart dosyasından alır, bu satır olmadan proje derlenemez -->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

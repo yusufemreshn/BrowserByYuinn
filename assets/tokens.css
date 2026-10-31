@@ -1,0 +1,92 @@
+/* Bu dosya, tarayıcının tüm arayüz sayfalarının (toolbar, Ayarlar, Yeni Sekme, Karşılama, Kısayollar) ortak kullandığı tasarım değişkenlerini (renkler, köşe yuvarlaklığı, yazı boyutu) tek bir yerde tanımlar. */
+/* Her sayfa bu dosyayı kendi stil dosyasının başında bağlar, böylece renk/tema sistemi tek bir yerde değişir, dört ayrı dosyada tekrar tekrar güncellenmesi gerekmez. */
+/* Açık/koyu tema seçimi, native taraftan gelen tema mesajına göre JavaScript tarafından <html> etiketine eklenen data-tema="acik" veya data-tema="koyu" özelliğiyle kontrol edilir, hiçbir özellik yoksa (otomatik mod) işletim sisteminin tercihi kullanılır. */
+
+:root {
+    /* Varsayılan, taban tema: koyu. Bu tarayıcı koyu temayla doğdu, açık tema üstüne bilinçli bir alternatif olarak eklendi. */
+    --zemin-0: #0d0e12; /* En koyu zemin, ana pencere arka planı */
+    --zemin-1: #15161c; /* Toolbar ve kart yüzeyleri */
+    --zemin-2: #1c1d24; /* Pasif sekmeler, girdi kutuları */
+    --zemin-3: #262832; /* Aktif/hover yüzeyler */
+    --zemin-4: #34363f; /* Kenarlıklar, ayırıcılar */
+    --metin: #e8e9ed; /* Ana yazı rengi */
+    --metin-soluk: #8b8d98; /* İkincil, soluk yazı rengi */
+
+    --vurgu-rengi: #3b82f6; /* Kullanıcının seçtiği vurgu (accent) rengi, native taraf bunu anında günceller */
+    --radius: 10px; /* Kullanıcının seçtiği köşe yuvarlaklığı, native taraf bunu anında günceller */
+    --radius-tab: 10px; /* Sekmelerin üst köşe yuvarlaklığı, genelde --radius ile aynı değeri taşır */
+    --yazi-boyutu: 14px; /* Kullanıcının seçtiği temel yazı boyutu */
+
+    color-scheme: dark; /* Tarayıcının kendi kaydırma çubuğu gibi öğelerinin de koyu temaya uyması sağlanır */
+}
+
+/* Açık tema, kullanıcı Ayarlar'dan özellikle "Açık" seçtiğinde devreye girer */
+:root[data-tema="acik"] {
+    --zemin-0: #f3f4f7;
+    --zemin-1: #ffffff;
+    --zemin-2: #ececf1;
+    --zemin-3: #e1e2e9;
+    --zemin-4: #c9cad4;
+    --metin: #16171c;
+    --metin-soluk: #6b6d7a;
+    color-scheme: light;
+}
+
+/* Yüksek kontrast tema, kullanıcı Ayarlar'dan özellikle "Yüksek Kontrast" seçtiğinde devreye girer, erişilebilirlik için tasarlanmıştır */
+/* Zemin tonları arasındaki farklar kasıtlı olarak çok büyük tutulur (saf siyah/beyaza yakın), böylece zayıf görüşlü kullanıcılar için sekme/buton/kenarlık ayrımları daha net olur */
+:root[data-tema="yuksekkontrast"] {
+    --zemin-0: #000000;
+    --zemin-1: #000000;
+    --zemin-2: #0a0a0a;
+    --zemin-3: #2a2a2a;
+    --zemin-4: #ffffff;
+    --metin: #ffffff;
+    --metin-soluk: #d8d8d8; /* Normal temadaki soluk metinden çok daha az soluk tutulur, okunabilirlik erişilebilirlikte her şeyden önce gelir */
+    color-scheme: dark;
+}
+:root[data-tema="yuksekkontrast"] :focus-visible {
+    outline: 3px solid #ffff00; /* Odak çerçevesi, diğer temalardaki vurgu renginden bağımsız, her zaman son derece belirgin bir sarıyla gösterilir */
+    outline-offset: 2px;
+}
+
+/* Kullanıcı "Otomatik" modundaysa (hiçbir data-tema özelliği eklenmediyse), işletim sisteminin açık/koyu tercihi izlenir */
+@media (prefers-color-scheme: light) {
+    :root:not([data-tema]) {
+        --zemin-0: #f3f4f7;
+        --zemin-1: #ffffff;
+        --zemin-2: #ececf1;
+        --zemin-3: #e1e2e9;
+        --zemin-4: #c9cad4;
+        --metin: #16171c;
+        --metin-soluk: #6b6d7a;
+        color-scheme: light;
+    }
+}
+
+* {
+    box-sizing: border-box; /* Her öğenin kenarlık ve iç boşluğunun, genişlik hesabına dahil edilmesi sağlanır */
+}
+
+html, body {
+    margin: 0; /* Tarayıcının kendiliğinden eklediği dış boşluk kaldırılır */
+    height: 100%; /* Sayfanın tüm pencere yüksekliğini kaplaması sağlanır */
+    background-color: var(--zemin-0); /* Arka plan, güncel temanın en koyu/en açık zemin rengini kullanır */
+    color: var(--metin); /* Genel yazı rengi, güncel temaya göre ayarlanır */
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif; /* Windows'ta hazır bulunan, modern gövdeli Segoe UI Variable tercih edilir, yoksa klasik Segoe UI'a düşer */
+    font-size: var(--yazi-boyutu); /* Yazı boyutu, kullanıcının Ayarlar'dan seçtiği değere göre ayarlanır */
+    -webkit-font-smoothing: antialiased; /* Yazı karakterleri daha pürüzsüz görünür */
+}
+
+/* Adres çubuğu gibi yerlerde alan adını gösterirken kullanılan, sabit genişlikli yazı tipi */
+.mono {
+    font-family: "Cascadia Code", ui-monospace, Consolas, monospace; /* Windows'ta yaygın bulunan Cascadia Code tercih edilir, yoksa sistemin kendi sabit genişlikli yazı tipine düşer */
+}
+
+:focus-visible {
+    outline: 2px solid var(--vurgu-rengi); /* Klavyeyle gezinirken, odaklanılan öğenin etrafında vurgu renginde belirgin bir çerçeve görünür */
+    outline-offset: 2px; /* Çerçeve, öğenin hemen kenarına yapışmadan küçük bir boşlukla çizilir */
+}
+
+button {
+    font-family: inherit; /* Butonlar, tarayıcının varsayılanı yerine sayfanın genel yazı tipini kullanır */
+}

@@ -1,0 +1,111 @@
+/* Bu dosya, karşılama (onboarding) ekranının görsel görünümünü belirler. */
+
+@import url("tokens.css"); /* Ortak tema değişkenleri buradan alınır */
+
+html, body {
+    display: flex; /* Kartın ekranın tam ortasında durması için esnek kutu düzeni kullanılır */
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(640px 420px at 20% 0%, color-mix(in srgb, var(--vurgu-rengi) 14%, transparent), transparent 60%),
+        var(--zemin-0); /* Zeminin üstüne, vurgu renginden hafif bir ışık hüzmesi eklenir, boş bir ekran yerine canlı bir karşılama hissi verir */
+}
+
+#karsilama-karti {
+    width: 420px; /* Kartın sabit genişliği */
+    background-color: var(--zemin-1); /* Kartın yüzey rengi */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: calc(var(--radius) * 1.6); /* Kart, genel köşe yuvarlaklığından biraz daha belirgin bir yuvarlaklıkla öne çıkar */
+    padding: 36px 32px; /* Kartın iç boşluğu */
+    box-shadow: 0 24px 64px -24px rgba(0, 0, 0, 0.5); /* Kartın altında, "yüzüyor" hissi veren yumuşak bir gölge */
+    animation: kart-belir 280ms cubic-bezier(0.22, 1, 0.36, 1); /* Kart, sayfa açılır açılmaz hafif bir büyüyerek belirme animasyonuyla görünür */
+}
+@keyframes kart-belir {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+h1 {
+    margin: 0 0 6px 0; /* Başlığın altına küçük bir boşluk bırakılır */
+    font-size: 20px; /* Başlığın yazı boyutu */
+    font-weight: 600; /* Başlık, normal yazıdan belirgin şekilde kalın gösterilir */
+}
+
+.aciklama {
+    margin: 0 0 28px 0; /* Açıklamanın altına boşluk bırakılır */
+    color: var(--metin-soluk); /* Açıklama, ana metinden daha soluk bir tonla gösterilir */
+    font-size: 13px; /* Açıklamanın yazı boyutu */
+}
+
+.soru {
+    margin-bottom: 26px; /* Her soru bloğunun altına boşluk bırakılır */
+}
+.soru-baslik {
+    font-size: 12.5px; /* Soru başlığının yazı boyutu */
+    color: var(--metin-soluk); /* Soru başlığı, ana metinden daha soluk bir tonla gösterilir */
+    margin-bottom: 10px; /* Soru başlığının altına boşluk bırakılır */
+}
+
+#renk-secenekleri {
+    display: flex; /* Renk noktaları yan yana dizilir */
+    gap: 10px; /* Noktalar arasına boşluk eklenir */
+}
+.renk-noktasi {
+    width: 30px; height: 30px; /* Her renk noktasının boyutu */
+    border-radius: 50%; /* Tam daire biçimi */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+    border: 2px solid transparent; /* Normalde görünmeyen, seçili olanı vurgulayan kenarlık */
+    transition: transform 100ms ease, border-color 100ms ease; /* Seçim ve hover durumları yumuşak geçişle olur */
+}
+.renk-noktasi:hover { transform: scale(1.1); }
+.renk-noktasi.secili { border-color: var(--metin); }
+
+.segment-grup {
+    display: flex; /* Segment butonları yan yana dizilir */
+    gap: 6px; /* Butonlar arasına boşluk eklenir */
+}
+.segment {
+    flex: 1; /* Her segment, eşit genişlikte alan kaplar */
+    text-align: center; /* Metin ortalanır */
+    padding: 9px 4px; /* İç boşluk */
+    border-radius: var(--radius); /* Köşeler, kullanıcının seçtiği köşe yuvarlaklığına göre yuvarlanır */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    background-color: var(--zemin-2); /* Normal durumdaki arka plan rengi */
+    color: var(--metin-soluk); /* Normal durumdaki yazı rengi */
+    font-size: 12.5px; /* Yazı boyutu */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease; /* Durum değişiklikleri yumuşak geçişle olur */
+}
+.segment:hover { background-color: var(--zemin-3); }
+.segment.secili {
+    background-color: color-mix(in srgb, var(--vurgu-rengi) 18%, var(--zemin-2)); /* Seçili segment, vurgu renginin karıştığı bir tonla doldurulur */
+    color: var(--metin); /* Seçili segmentin yazısı belirginleşir */
+    border-color: color-mix(in srgb, var(--vurgu-rengi) 50%, transparent); /* Seçili segmentin kenarlığı vurgu rengine yaklaşır */
+}
+
+.eylemler {
+    display: flex; /* Butonlar yan yana, sağa yaslı dizilir */
+    justify-content: flex-end;
+    gap: 10px; /* Butonlar arasına boşluk eklenir */
+    margin-top: 32px; /* Üstündeki içerikten ayrılması için boşluk bırakılır */
+}
+
+.birincil-buton, .ikincil-buton {
+    padding: 10px 20px; /* Buton iç boşluğu */
+    border-radius: var(--radius); /* Köşeler, kullanıcının seçtiği köşe yuvarlaklığına göre yuvarlanır */
+    border: none; /* Varsayılan kenarlık kaldırılır */
+    font-size: 13.5px; /* Yazı boyutu */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+    transition: transform 80ms ease, filter 120ms ease; /* Basma ve hover durumları yumuşak geçişle olur */
+}
+.birincil-buton {
+    background-color: var(--vurgu-rengi); /* Birincil buton, vurgu rengiyle doldurulur */
+    color: #ffffff; /* Yazı rengi beyaz olarak ayarlanır */
+    font-weight: 600; /* Birincil buton, biraz daha kalın gösterilir */
+}
+.ikincil-buton {
+    background-color: transparent; /* İkincil buton, şeffaf bir arka plana sahiptir */
+    color: var(--metin-soluk); /* İkincil butonun yazısı daha soluk bir tondadır */
+}
+.birincil-buton:hover, .ikincil-buton:hover { filter: brightness(1.12); }
+.birincil-buton:active, .ikincil-buton:active { transform: scale(0.96); }

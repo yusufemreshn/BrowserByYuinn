@@ -1,0 +1,20 @@
+<!-- Bu dosya, bir site konum/kamera/mikrofon/bildirim/otomatik oynatma izni istediğinde beliren, ayrı küçük bir native pencerede gösterilen izin bildirim panelinin iskeletini oluşturur. -->
+<!-- Bu panel, menü ve DevTools panelleriyle aynı mimariyi kullanır: BrowserWindow sınıfı tarafından oluşturulan AYRI bir WebView2 denetleyicisinde gösterilir, böylece ne içerik kayar ne de örtülür. -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <title>İzin İsteği</title> <!-- Bu sayfanın başlığı, kullanıcıya hiç görünmez -->
+    <link rel="stylesheet" href="chrome.css" /> <!-- .izin-sayfasi gibi bu panele özel stiller de chrome.css içinde tanımlıdır -->
+</head>
+<body class="izin-sayfasi">
+    <div id="izin-site-adi"></div> <!-- İzni isteyen sitenin alan adı, native taraftan gelen bilgiyle doldurulur -->
+    <p id="izin-aciklama"></p> <!-- "konumunuza erişmek istiyor" gibi, istenen izni açıklayan metin -->
+    <label id="izin-hatirla-satiri"><input type="checkbox" id="izin-hatirla-kutusu" checked />Bu site için hatırla</label>
+    <div id="izin-butonlari">
+        <button id="izin-engelle-butonu">Engelle</button>
+        <button id="izin-izin-ver-butonu">İzin Ver</button>
+    </div>
+    <script src="izin-bildirimi.js"></script>
+</body>
+</html>

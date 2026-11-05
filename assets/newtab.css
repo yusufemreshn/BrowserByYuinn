@@ -8,6 +8,7 @@ html, body {
     align-items: center; /* İçerik dikeyde ortalanır */
     justify-content: center; /* İçerik yatayda ortalanır */
     width: 100%; /* Body, flex öğesi olduğu için içeriğe göre daralmasın diye tüm genişliği kaplaması sağlanır, aksi halde arka plan sadece dar bir sütunda görünür */
+    height: 100%; /* Body'ye gerçek bir yükseklik verilmezse dikey ortalamanın hesaplayacağı boş alan olmaz, içerik viewport'un üst kenarına yapışık ve küçük kalır */
     background-image: url("varsayilan-arkaplan.svg"); /* Kullanıcı Ayarlar > Görünüm'den kendi resmini seçmediği sürece gösterilen sabit, tek varsayılan arka plan */
     background-size: cover; /* Arka plan deseni, pencereyi tamamen kaplayacak şekilde ölçeklenir */
     background-position: center; /* Arka plan deseni, her zaman ortadan gösterilir */
@@ -19,10 +20,6 @@ html, body {
     width: 100%; /* Kapsayıcı, mevcut genişliği kullanır */
     max-width: 640px; /* Ama çok geniş ekranlarda aşırı yayılmaması için bir üst sınır konur */
     padding: 40px 32px; /* Kenarlara boşluk eklenir */
-    background-color: color-mix(in srgb, var(--zemin-1) 88%, transparent); /* Arka plandaki desenin üzerinde yarı saydam bir panel, yazıların okunaklı kalması canlı bulanıklaştırma yerine yüksek örtücülükle sağlanır */
-    border: 1px solid color-mix(in srgb, var(--zemin-4) 50%, transparent); /* Panelin kenarına, ince ve yarı saydam bir çerçeve çizilir */
-    border-radius: calc(var(--radius) * 1.4); /* Panelin köşeleri, kutulardan biraz daha yuvarlak yapılır */
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35); /* Panelin altına, fotoğraftan ayrışmasını sağlayan derin bir gölge düşer */
 }
 
 h1 {
@@ -35,7 +32,8 @@ h1 {
 
 #hizli-erisim-kutulari {
     display: grid; /* Kutular, satır ve sütunlara otomatik yerleşsin diye izgara düzeni kullanılır */
-    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); /* Sütun sayısı, pencere genişliğine göre kendiliğinden ayarlanır */
+    grid-template-columns: repeat(auto-fit, 88px); /* Sütun genişliği sabit tutulur, az sayıda kutu olduğunda aradaki boşluk aşırı açılmaz */
+    justify-content: center; /* Kutular, kapsayıcı içinde yatayda ortalanır, kenarlara yapışıp aralarının açılması önlenir */
     gap: 18px; /* Kutular arasına boşluk eklenir */
 }
 
@@ -44,14 +42,14 @@ h1 {
     flex-direction: column; /* İçerik dikey olarak sıralanır */
     align-items: center; /* İçerik yatayda ortalanır */
     gap: 10px; /* İkon ile metin arasına boşluk eklenir */
-    padding: 20px 10px; /* Kutunun iç boşluğu */
+    max-width: 88px; /* Kutunun yatay uzunluğu, gereğinden geniş görünmesin diye daraltılır */
+    padding: 20px 6px; /* Kutunun iç boşluğu */
     border-radius: var(--radius); /* Köşeler, kullanıcının seçtiği köşe yuvarlaklığına göre yuvarlanır */
-    background-color: var(--zemin-1); /* Kutunun arka plan rengi */
+    background-color: rgba(128, 128, 128, 0.35); /* Kutunun arkasına, tema renginden bağımsız, düz ve belirgin bir gri zemin konur */
+    border: 1px solid rgba(128, 128, 128, 0.5); /* Zeminin etrafına, aynı düz griden ince bir çerçeve çizilir */
     color: var(--metin); /* Kutunun yazı rengi */
     cursor: pointer; /* Fare kutunun üzerine geldiğinde el işaretçisi gösterilir */
     text-decoration: none; /* Bağlantı altı çizgisi kaldırılır */
-    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); /* Kutuya hafif bir derinlik hissi veren ince bir gölge */
     transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease; /* Hover durumu yumuşak geçişle olur */
     animation: kutu-belir 240ms ease backwards; /* Kutu, sayfa açıldığında yavaşça belirir */
 }
@@ -73,6 +71,10 @@ h1 {
     from { opacity: 0; transform: translateY(6px); } /* Kutu, biraz aşağıdan ve saydam başlar */
     to { opacity: 1; transform: translateY(0); } /* Kutu, yerine ve tam görünür hale gelir */
 }
+.hizli-erisim-ikon {
+    width: 38px; height: 38px; /* İkonun boyutu, yedek harf dairesiyle aynı tutulur */
+    object-fit: contain; /* İkon, kendi gerçek şeklinde (yuvarlak olmak zorunda kalmadan) olduğu gibi gösterilir, kırpılmaz */
+}
 .hizli-erisim-harf {
     width: 38px; height: 38px; /* Harf dairesinin boyutu */
     border-radius: 50%; /* Her zaman tam daire, köşe ayarından etkilenmez, bir "kimlik rozeti" gibi davranır */
@@ -85,7 +87,7 @@ h1 {
 }
 .hizli-erisim-isim {
     font-size: 12px; /* Site isminin yazı boyutu */
-    color: var(--metin-soluk); /* Site isminin rengi */
+    color: #ffffff; /* Site isminin rengi, fotoğraf zemininin üstünde her zaman okunaklı olsun diye düz beyaz yapılır */
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; /* Taşan metin kısaltılır */
 }
 

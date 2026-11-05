@@ -31,15 +31,27 @@ window.chrome.webview.addEventListener("message", function (olay) {
             kutu.className = "hizli-erisim-kutusu"; // Kutuya stil sınıfı atanır
             kutu.href = site.adres; // Kutuya tıklanınca gidilecek adres atanır, bu WebView2 içinde normal bir gezinme olarak çalışır
 
-            const harfOgesi = document.createElement("div"); // Site isminin ilk harfini gösterecek daire öğesi
+            const harfOgesi = document.createElement("div"); // Site ikonu gelmezse gösterilecek, ilk harfi taşıyan yedek daire öğesi
             harfOgesi.className = "hizli-erisim-harf"; // Daireye stil sınıfı atanır
             harfOgesi.textContent = ilkHarfiAl(site.baslik); // Sitenin ilk harfi yazılır
+
+            let siteHostu = ""; // Google favicon servisine gönderilecek, adresten ayıklanan alan adı
+            try { siteHostu = new URL(site.adres).hostname; } catch (hata) { siteHostu = ""; } // Adres bozuksa alan adı boş kalır, ikon istenmez
+
+            if (siteHostu) { // Alan adı ayıklanabildiyse, harf yerine gerçek site ikonu denenir
+                const ikonOgesi = document.createElement("img"); // Google'ın favicon servisinden gelecek ikon için resim öğesi
+                ikonOgesi.className = "hizli-erisim-ikon"; // İkona stil sınıfı atanır
+                ikonOgesi.src = "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(siteHostu) + "&sz=64"; // Sayfa ilk ziyaret edildiğinde native taraf bu adresi zaten önbelleğe ısıtmıştır
+                ikonOgesi.onerror = function () { ikonOgesi.replaceWith(harfOgesi); }; // İkon hiç bulunamazsa (örneğin site favicon sunmuyorsa), yedek harf dairesi onun yerine konur
+                kutu.appendChild(ikonOgesi); // İkon, kutunun içine eklenir
+            } else {
+                kutu.appendChild(harfOgesi); // Alan adı yoksa doğrudan yedek harf dairesi eklenir
+            }
 
             const isimOgesi = document.createElement("div"); // Site ismini gösterecek metin öğesi
             isimOgesi.className = "hizli-erisim-isim"; // Metne stil sınıfı atanır
             isimOgesi.textContent = site.baslik; // Site ismi (alan adı) yazılır
 
-            kutu.appendChild(harfOgesi); // Harf dairesi, kutunun içine eklenir
             kutu.appendChild(isimOgesi); // İsim metni, kutunun içine eklenir
             kapsayici.appendChild(kutu); // Hazırlanan kutu, kapsayıcıya eklenir
         });

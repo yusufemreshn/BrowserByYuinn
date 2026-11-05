@@ -1,0 +1,4 @@
+// Bu dosya, derlenen programa gömülecek kaynakları tanımlar, şu an için sadece programın simgesini (.ico) içerir
+#include "resource.h"
+
+IDI_APPICON ICON "app.ico"

@@ -29,6 +29,7 @@ struct SekmeBilgisi
     bool sessizeAlindiMi = false; // Kullanıcının bu sekmeyi elle sessize alıp almadığı, WebView2'nin IsMuted özelliğiyle eşlenir
     bool sesCaliyorMu = false; // Bu sekmenin şu anda ses çalıp çalmadığı (video/müzik gibi), sekme şeridinde ses ikonu göstermek için kullanılır
     int grupId = 0; // Bu sekmenin ait olduğu sekme grubunun kimliği, 0 ise hiçbir gruba ait değildir
+    std::wstring favicon; // Sitenin kendi favicon'u, "data:image/...;base64,..." biçiminde bir hazır veri adresi olarak tutulur, site henüz favicon vermediyse boştur ve sekme şeridinde programın kendi logosu gösterilir
     std::wstring sertifikaKonu; // Geçerli (hatasız) bir HTTPS bağlantısının sertifika "subject" (konu) bilgisi, CDP Network.responseReceived olayından doldurulur, her yeni gezinmede temizlenir
     std::wstring sertifikaYayinlayan; // Aynı sertifikanın yayınlayan (issuer) bilgisi
     std::wstring sertifikaProtokol; // Bağlantıda kullanılan TLS protokol sürümü (örn. "TLS 1.3")
@@ -102,6 +103,11 @@ private:
 
     // Bu fonksiyon, hamburger menü panelini kapatır (gizler)
     void MenuyuKapat();
+
+    // Bu fonksiyon, menü panelinin WebView2'sinin gerçek alt penceresini bulup üzerine yuvarlak köşeli bir SetWindowRgn uygular
+    // menu.css'teki border-radius sadece ÇİZİMİ yuvarlatır, pencerenin GERÇEK dikdörtgen sınırını değiştirmez; bu yüzden köşelerde eski köşeli pencerenin kendisi (genelde siyah) görünmeye devam eder
+    // Bu fonksiyon o gerçek pencereyi de aynı yarıçapla kırparak, köşelerin dışında kalan kısmın hiç çizilmemesini (altındaki sayfanın görünmesini) sağlar
+    void MenuPaneliKoseleriniYuvarlaYap(const RECT& menuAlaniIstemciKoordinati);
 
     // Bu fonksiyon, native taraftan hamburger menü paneline bir metin mesajı gönderir
     void MenuyeMesajGonder(const std::wstring& mesaj);
@@ -249,6 +255,15 @@ private:
     // WebView2 ortamı süreç başına tek olduğu için, canlı (yeniden başlatmasız) profil değişimi bu mimaride desteklenmez, bu basit ve güvenilir yöntem tercih edilmiştir
     void ProfileGecisYapVeYenidenBaslat(const std::wstring& profilAdi);
 
+    // Bu fonksiyon, Windows şifresiyle doğrulandıktan sonra verilen profilin klasörünü (ve içindeki tüm WebView2 verisini) kalıcı olarak siler, aktif profil silinemez
+    void ProfiliSil(int sekmeId, const std::wstring& profilAdi);
+
+    // Bu fonksiyon, "resimler" klasöründeki tüm resimlerin dosya adlarını, Ayarlar sayfasındaki galerinin çizebilmesi için JSON olarak gönderir
+    void ArkaPlanGalerisiniGonder(int sekmeId);
+
+    // Bu fonksiyon, kullanıcı Ayarlar sayfasındaki galeriden bir resme tıkladığında, o resmi (dosya adını "resimler" klasörüyle birleştirerek) yeni sekme arka planı olarak kaydeder
+    void KlasordenArkaPlanSec(int sekmeId, const std::wstring& dosyaAdi);
+
     // Bu fonksiyon, dahili bir klavye kısayolları yardım sekmesi açar, eğer zaten açıksa var olan sekmeye geçer
     void KisayollarSekmesiniAc();
 
@@ -315,6 +330,12 @@ private:
 
     // Bu fonksiyon, adres çubuğu öneri panelini kapatır (gizler)
     void OneriPaneliniKapat();
+
+    // Bu fonksiyon, adres çubuğunda yukarı/aşağı ok tuşuna basıldığında öneri panelindeki klavye seçimini bir satır ileri/geri taşır, panel kapalıysa hiçbir şey yapmaz
+    void AdresOnerisiGezin(const std::wstring& yon);
+
+    // Bu fonksiyon, Enter'a basıldığında öneri panelinde klavyeyle seçili bir satır varsa ona gider ve true döner, hiçbir satır seçili değilse hiçbir şey yapmadan false döner
+    bool AdresOnerisiSeciliyiOnayla();
 
     // Bu fonksiyon, verilen kimlik numaralı sekmenin sabitlenmiş (pinned) durumunu tersine çevirir, sabitlenmiş sekmeler şeritte en solda ve daha küçük gösterilir
     void SekmeyiSabitleKaldir(int sekmeId);
@@ -414,7 +435,9 @@ private:
     Microsoft::WRL::ComPtr<ICoreWebView2Controller> m_oneriDenetleyici; // Öneri panelini gösteren ayrı denetleyici
     Microsoft::WRL::ComPtr<ICoreWebView2> m_oneriWebView; // Öneri panelinin kendi WebView2 nesnesi
     bool m_oneriPaneliAcikMi = false; // Öneri panelinin şu anda açık olup olmadığı
-    static const int OneriPaneliSatirYuksekligi = 36; // Her öneri satırının kapladığı yaklaşık yükseklik, panel boyu öneri sayısına göre hesaplanır
+    static const int OneriPaneliSatirYuksekligi = 42; // Her öneri satırının kapladığı GERÇEK yükseklik (CSS'teki iç boşluk + iki satırlık metin + alt çizgi ile birebir), bundan düşük bir değer panelin alt satırları kırpılmış/eksik görünmesine yol açar
+    int m_oneriSecilenIndeks = -1; // Panelde klavye ile o an seçili olan satırın sırası (0'dan başlar), hiçbir satır seçili değilse (orijinal yazılan metin geçerliyse) -1
+    std::vector<std::wstring> m_oneriSeciliAdresler; // Panelde o an gösterilen (hesap sonucu satırı hariç) her satırın adresi, klavyeyle onaylama bu listeden adres bulur
 
     std::vector<IndirmeBilgisi> m_indirmeler; // Bu oturumda başlayan tüm indirmelerin listesi, en yeni en sonda
     int m_sonrakiIndirmeId = 1; // Bir sonraki indirmeye verilecek kimlik numarası, her yeni indirmede bir artırılır
@@ -469,7 +492,7 @@ private:
 
     // Hamburger menü panelinin (ayrı denetleyicisinin) sabit genişliği ve azami yüksekliği, içindeki tüm öğelerin rahatça sığması için yeterli bir pay bırakılır
     static const int MenuPaneliGenisligi = 300;
-    static const int MenuPaneliYuksekligi = 480;
+    static const int MenuPaneliYuksekligi = 720; // Varsayılan yükseklik %50 artırıldı (480 -> 720), menüdeki tüm öğeler kaydırma gerekmeden sığsın diye
     bool m_hamburgerMenusuAcikMi = false; // Hamburger menüsünün şu anda açık olup olmadığı
     // Menü paneli odak kaybıyla (LostFocus) kapandığında bu an kaydedilir
     // Hamburger butonuna tıklamak da önce panelin odağını kaçırıp LostFocus'u tetiklediği için (fare tıklaması odağı mousedown anında değiştirir, "click" olayı daha SONRA gelir),

@@ -58,6 +58,7 @@ h1 {
     transition: transform 100ms ease, border-color 100ms ease; /* Seçim ve hover durumları yumuşak geçişle olur */
 }
 .renk-noktasi:hover { transform: scale(1.1); }
+.renk-noktasi:active { transform: scale(0.94); }
 .renk-noktasi.secili { border-color: var(--metin); }
 
 .segment-grup {

@@ -3,6 +3,7 @@
 // Bu dosya, WebView2 kütüphanesi ile doğrudan konuşan tek dosyadır, geçmiş/yer imi için Storage.h, hata kaydı için Logger.h, ayarlar için Settings.h, şifreler için PasswordVault.h ve GuvenlikDogrulama.h dosyalarını kullanır.
 
 #include "BrowserWindow.h" // Bu dosyanın, hangi sınıfın gövdesini yazdığını bilmesi için kendi başlık dosyası eklenir
+#include "resource.h" // Programın gömülü simgesinin (IDI_APPICON) kimlik numarasını kullanmak için eklenir
 #include "Storage.h" // Geçmişe kayıt ekleme ve yer imi işlemleri için eklenir
 #include "Logger.h" // Hata kodlarını günlüğe kaydetme, kodun açıklamasını bulma ve günlüğü okuma için eklenir
 #include "Settings.h" // Kullanıcının arama motoru, ana sayfa ve tema ayarlarını okuyup yazmak için eklenir
@@ -32,11 +33,16 @@
 #include <shlobj.h> // Kullanıcının paketlenmemiş bir uzantı klasörü seçebileceği standart "Klasör Seç" penceresini (SHBrowseForFolderW) açmak için eklenir
 #include <fstream> // Seçilen arka plan resminin ham baytlarını diskten okumak için eklenir
 #include <cstdint> // uint32_t/uint8_t türlerini kullanmak için eklenir, CRX paket başlığını ayrıştırırken kullanılır
+#include <wincodec.h> // Arka plan galerisindeki fotoğrafların küçük (128x128) önizlemelerini, Base64'e çevirip JSON'a gömmek yerine WIC ile anlık olarak küçültüp diske yazmak için eklenir, tam boyutlu fotoğrafları önizlemede göstermek arayüzü ciddi şekilde kasıyordu
 
 using namespace Microsoft::WRL; // ComPtr ve Callback gibi isimleri her yerde Microsoft::WRL:: önekiyle yazmamak için bu isim alanı kullanılır
 
 // İleri bildirim: bu fonksiyonun gövdesi dosyanın ilerisinde tanımlıdır, ama pencere mesaj işleyicisi (WndProc) dosyanın başında olduğu ve onu kullandığı için önce bildirilmesi gerekir
 static ComPtr<ICoreWebView2Profile7> EklentiProfiliniAl(ICoreWebView2* herhangiBirWebView);
+
+// İleri bildirim: "resimler" klasörünün tam yolunu bulan fonksiyon, dosyanın ilerisinde tanımlıdır ama sekme oluşturma kodu (dahili sayfalara sanal klasör eşleme) bu fonksiyonu daha yukarıda kullanır
+static std::wstring ResimlerKlasorunuBul();
+static std::vector<std::wstring> ResimlerKlasorunuTara(const std::wstring& klasor);
 
 // Bu fonksiyon, çalışmakta olan programın (tarayici.exe dosyasının) bulunduğu klasörün tam yolunu bulur, böylece assets klasörüne doğru şekilde ulaşılabilir
 static std::wstring CalismaKlasoruBul()
@@ -165,12 +171,13 @@ bool BrowserWindow::Create(HINSTANCE uygulamaOrnegi)
     pencereSinifi.hInstance = uygulamaOrnegi; // Pencere sınıfının ait olduğu uygulama örneği belirtilir
     pencereSinifi.lpszClassName = pencereSinifAdi; // Pencere sınıfının ismi atanır
     pencereSinifi.hCursor = LoadCursor(nullptr, IDC_ARROW); // Fare imlecinin normal ok şeklinde görünmesi sağlanır
+    pencereSinifi.hIcon = LoadIcon(uygulamaOrnegi, MAKEINTRESOURCE(IDI_APPICON)); // Pencerenin başlık çubuğunda ve görev çubuğunda gösterilecek gömülü simge
     RegisterClass(&pencereSinifi); // Pencere sınıfı, Windows işletim sistemine kaydedilir
 
     // Pencere, WS_CAPTION (Windows'un başlık çubuğu) stilini BİLEREK İÇERİR, çünkü Windows'un küçültme/büyütme/geri yükleme sırasındaki akıcı animasyonları, ancak pencere bu stile sahipse çalışır
     // Başlık çubuğunun kendisi görsel olarak hiç çizilmeyecek, bunu PencereMesajIsle içindeki WM_NCCALCSIZE işleyicisi sağlıyor, ama pencere Windows'a "normal, animasyonlu bir pencereyim" demeye devam ediyor
     m_pencere = CreateWindowEx(
-        0, pencereSinifAdi, L"Tarayıcı", WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU,
+        0, pencereSinifAdi, L"Yuinn", WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT, 1280, 800,
         nullptr, nullptr, uygulamaOrnegi, this // Bu BrowserWindow nesnesinin kendi adresi, pencereye özel veri olarak gönderilir
     );
@@ -190,6 +197,13 @@ bool BrowserWindow::Create(HINSTANCE uygulamaOrnegi)
     BildirimSimgesiOlustur(); // İndirme tamamlanma bildirimleri için kullanılacak, görünmez bildirim alanı simgesi oluşturulur
     WebView2OrtamiBaslat(); // WebView2 ortamının asenkron olarak hazırlanması başlatılır
     return true; // Pencere başarıyla oluşturuldu
+}
+
+// Pencere tam ekran değilken, sol ve sağ kenarda Windows'un kendi (görünmez) boyutlandırma çerçevesi için ayrılan piksel kalınlığı
+// WM_NCCALCSIZE içinde istemci alanı bu kadar içeri çekilerek, bu şerit WebView2'ye değil doğrudan Windows'un standart kenar boyutlandırma mantığına bırakılır
+static int KenarTutmaPayi()
+{
+    return GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
 }
 
 // Windows, bu sınıftan oluşan bir pencereye her mesaj geldiğinde önce bu statik fonksiyonu çağırır
@@ -221,9 +235,19 @@ LRESULT BrowserWindow::PencereMesajIsle(HWND pencere, UINT mesaj, WPARAM birinci
 {
     if (mesaj == WM_NCCALCSIZE && birinciParametre == TRUE) // Pencerenin çerçeve dışı (başlık çubuğu, kenarlık) alanı hesaplanırken gelen mesaj ise
     {
-        // Hiçbir şey yapmadan sıfır döndürülür, bu da istemci (içerik) alanının pencerenin tamamını kaplamasını sağlar, yani Windows'un kendi beyaz başlık çubuğu hiç çizilmez
-        // Pencere yine de yeniden boyutlandırılabilir kalır çünkü WS_THICKFRAME stili hâlâ kullanılıyor, Windows kenarlardaki boyutlandırma imleçlerini ve Windows 11'in kenara yaslama (snap) menüsünü kendiliğinden tanımaya devam eder
-        return 0; // Varsayılan çerçeve çizimi tamamen iptal edilir
+        // Üstte hiç boşluk bırakılmaz, yani Windows'un kendi beyaz başlık çubuğu hiç çizilmez (WS_CAPTION sadece küçült/büyüt animasyonları için stilde tutuluyor)
+        // Ama pencere büyütülmüş değilse sol/sağ/alttan, Windows'un GERÇEK boyutlandırma çerçevesi kadar (SM_CXSIZEFRAME + SM_CXPADDEDBORDER) içeri çekilir
+        // Bu şerit hiçbir WebView2 tarafından kaplanmaz, biz de hiçbir şey boyamayız: orayı doğrudan Windows'un kendi görünmez boyutlandırma çerçevesi olarak yönetmesine bırakırız, WM_NCHITTEST de bunun için otomatik çalışır, elle kod yazmaya gerek kalmaz
+        if (!IsZoomed(pencere))
+        {
+            NCCALCSIZE_PARAMS* hesapBilgisi = reinterpret_cast<NCCALCSIZE_PARAMS*>(ikinciParametre);
+            int payX = KenarTutmaPayi();
+            int payY = GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+            hesapBilgisi->rgrc[0].left += payX;
+            hesapBilgisi->rgrc[0].right -= payX;
+            hesapBilgisi->rgrc[0].bottom -= payY;
+        }
+        return 0; // Üstteki çerçeve çizimi tamamen iptal edilir, sol/sağ/alttaki ise yukarıda ayrıldıysa Windows'a bırakılır
     }
 
     if (mesaj == WM_SIZE) // Pencere boyutu değiştiğinde gelen mesaj ise
@@ -525,6 +549,8 @@ void BrowserWindow::MenuWebViewOlustur()
                 m_menuDenetleyici = denetleyici; // Oluşan denetleyici, bu sınıfın menü denetleyici değişkenine kaydedilir
                 m_menuDenetleyici->get_CoreWebView2(&m_menuWebView); // Denetleyicinin içindeki asıl WebView2 nesnesi alınır
                 m_menuDenetleyici->put_IsVisible(FALSE); // Panel, menü açılana kadar görünmez tutulur
+                // NOT: put_DefaultBackgroundColor ile saydamlık denendi ama WebView2 bu pencerede (DirectComposition kurulu olmadığı için) saydam alanı SİYAH boyuyor;
+                // bu yüzden köşe yuvarlama, aşağıdaki MenuPaneliKoseleriniYuvarlaYap() fonksiyonunda gerçek pencere bölgesini (SetWindowRgn) kırparak yapılıyor, renk hilesiyle değil
 
                 std::wstring varliklarKlasoru = CalismaKlasoruBul() + L"\\assets"; // Menü panelinin HTML dosyasının bulunduğu klasörün tam yolu
 
@@ -1028,6 +1054,12 @@ void BrowserWindow::SekmeDenetleyicisiHazirlandi(ICoreWebView2Controller* denetl
     {
         std::wstring varliklarKlasoru = CalismaKlasoruBul() + L"\\assets"; // Dahili sayfaların HTML dosyalarının bulunduğu klasörün tam yolu hesaplanır
         sekme->webViewGenisletilmis->SetVirtualHostNameToFolderMapping(L"tarayici.local", varliklarKlasoru.c_str(), COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_ALLOW); // Sahte güvenli adres ile gerçek klasör eşleştirilir, SADECE dahili sekmelerde yapılır, normal internet siteleri bu adrese asla erişemez
+
+        std::wstring resimlerKlasoru = ResimlerKlasorunuBul(); // Ayarlar sayfasındaki arka plan galerisinin, fotoğrafları Base64'e çevirmeden doğrudan <img> ile gösterebilmesi için "resimler" klasörü de ayrı bir sahte adrese eşlenir
+        if (!resimlerKlasoru.empty())
+        {
+            sekme->webViewGenisletilmis->SetVirtualHostNameToFolderMapping(L"tarayici-resimler.local", resimlerKlasoru.c_str(), COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_ALLOW);
+        }
 
         // Dahili sayfadan gelen mesajlar, normal sitelerden farklı, ayrıcalıklı bir işleyiciye yönlendirilir, bu işleyici asla normal bir internet sitesine bağlanmaz
         sekme->webView->add_WebMessageReceived(
@@ -1770,6 +1802,11 @@ void BrowserWindow::SekmeOlaylariniBagla(int sekmeId)
                         LPWSTR guncelAdres = nullptr; // Yüklenen sayfanın adresini tutacak değişken
                         guncelSekme->webView->get_Source(&guncelAdres); // Güncel adres okunur
                         Depolama::GecmiseEkle(guncelAdres, guncelSekme->baslik); // Bu ziyaret, geçmiş listesine kaydedilir (dahili tarayici.local sayfaları zaten Depolama tarafında otomatik olarak hariç tutulur)
+                        if (guncelAdres != nullptr && wcsncmp(guncelAdres, L"https://tarayici.local", 22) != 0) // Dahili sayfalar hariç, gerçek sitelerin ikonu şimdiden ısıtılır
+                        {
+                            // Google'ın favicon servisinden bu alan adının ikonu, sayfanın kendi içinde gizlice istenir, böylece tarayıcının paylaşılan HTTP önbelleğine düşer ve hızlı erişim sayfası açıldığında beklemeden görünür
+                            guncelSekme->webView->ExecuteScript(L"(function(){try{var i=new Image();i.src='https://www.google.com/s2/favicons?domain='+encodeURIComponent(location.hostname)+'&sz=64';}catch(e){}})();", nullptr);
+                        }
                         CoTaskMemFree(guncelAdres); // Ayrılan bellek serbest bırakılır
                     }
                 }
@@ -1860,6 +1897,7 @@ void BrowserWindow::SekmeOlaylariniBagla(int sekmeId)
                     guncelSekme->sertifikaKonu.clear();
                     guncelSekme->sertifikaYayinlayan.clear();
                     guncelSekme->sertifikaProtokol.clear();
+                    guncelSekme->favicon.clear(); // Yeni sayfanın kendi FaviconChanged olayı gelene kadar, eski sayfanın favicon'u sekme şeridinde kalmasın diye temizlenir
 
                     SekmeListesiniGonder(); // Sekme şeridinde yükleniyor göstergesinin belirmesi için liste tekrar gönderilir
                 }
@@ -1888,6 +1926,54 @@ void BrowserWindow::SekmeOlaylariniBagla(int sekmeId)
         ).Get(),
         nullptr
     );
+
+    // Sayfanın favicon'u değiştiğinde (veya ilk kez geldiğinde) bu fonksiyon çalışır
+    ComPtr<ICoreWebView2_15> webViewSurum15Favicon; // FaviconChanged olayı ve GetFaviconAsync fonksiyonu bu arayüz sürümünde bulunduğu için
+    if (SUCCEEDED(sekme->webView.As(&webViewSurum15Favicon)))
+    {
+        webViewSurum15Favicon->add_FaviconChanged(
+            Callback<ICoreWebView2FaviconChangedEventHandler>(
+                [this, sekmeId, gecerlilikBayragi = m_pencereGecerliMi](ICoreWebView2* gonderen, IUnknown* argumanlar) -> HRESULT
+                {
+                    SekmeBilgisi* guncelSekme = SekmeBul(sekmeId); // Güncel sekme bilgisine tekrar erişilir
+                    if (guncelSekme == nullptr || guncelSekme->webView == nullptr) { return S_OK; } // Sekme hâlâ açık değilse vazgeçilir
+
+                    ComPtr<ICoreWebView2_15> webViewSurum15;
+                    if (FAILED(guncelSekme->webView.As(&webViewSurum15))) { return S_OK; }
+
+                    webViewSurum15->GetFavicon(
+                        COREWEBVIEW2_FAVICON_IMAGE_FORMAT_PNG,
+                        Callback<ICoreWebView2GetFaviconCompletedHandler>(
+                            [this, sekmeId, gecerlilikBayragi](HRESULT sonuc, IStream* akis) -> HRESULT
+                            {
+                                if (!*gecerlilikBayragi) { return S_OK; } // Pencere bu sırada kapatılmaya başladıysa "this" işaretçisine dokunulmadan vazgeçilir
+                                SekmeBilgisi* guncelSekme2 = SekmeBul(sekmeId);
+                                if (guncelSekme2 == nullptr || FAILED(sonuc) || akis == nullptr) { return S_OK; } // Sekme kapandıysa veya site hiç favicon vermediyse sessizce vazgeçilir, mevcut varsayılan logo gösterilmeye devam eder
+
+                                LARGE_INTEGER sifirKonum{};
+                                akis->Seek(sifirKonum, STREAM_SEEK_SET, nullptr);
+                                STATSTG istatistik{};
+                                akis->Stat(&istatistik, STATFLAG_NONAME);
+                                ULONG boyut = static_cast<ULONG>(istatistik.cbSize.QuadPart);
+                                if (boyut == 0) { return S_OK; } // Boş akış, site henüz favicon vermedi demektir, varsayılan logo korunur
+
+                                std::vector<uint8_t> hamVeri(boyut);
+                                ULONG okunanBayt = 0;
+                                akis->Read(hamVeri.data(), boyut, &okunanBayt);
+                                hamVeri.resize(okunanBayt);
+
+                                guncelSekme2->favicon = L"data:image/png;base64," + Base64Kodla(hamVeri); // Ham PNG baytları, doğrudan bir <img>/arka plan resmine atanabilecek hazır veri adresine çevrilir
+                                SekmeListesiniGonder(); // Yeni favicon'un sekme şeridinde görünmesi için liste tekrar gönderilir
+                                return S_OK;
+                            }
+                        ).Get()
+                    );
+                    return S_OK;
+                }
+            ).Get(),
+            nullptr
+        );
+    }
 
     // Geri/ileri gidilebilirlik durumu değiştiğinde bu fonksiyon çalışır
     sekme->webView->add_HistoryChanged(
@@ -2093,7 +2179,7 @@ int BrowserWindow::ToplamToolbarYuksekligi()
 void BrowserWindow::BoyutlariGuncelle()
 {
     RECT istemciAlani; // Pencerenin iç (çerçeve hariç) alanını tutacak dikdörtgen yapısı
-    GetClientRect(m_pencere, &istemciAlani); // Pencerenin güncel iç alanı bu yapıya okunur
+    GetClientRect(m_pencere, &istemciAlani); // Pencerenin güncel iç alanı bu yapıya okunur, WM_NCCALCSIZE sayesinde bu alan zaten sol/sağ/alttaki gerçek boyutlandırma çerçevesini dışarıda bırakmış halde gelir
 
     if (m_toolbarDenetleyici != nullptr) // Eğer toolbar denetleyicisi henüz oluşmuşsa
     {
@@ -2124,6 +2210,7 @@ void BrowserWindow::BoyutlariGuncelle()
         int yukseklik = min(static_cast<int>(MenuPaneliYuksekligi), istemciAlani.bottom - ToplamToolbarYuksekligi()); // Panel, çok kısa pencerelerde bile taşmaz
         RECT menuAlani = { istemciAlani.right - genislik, ToplamToolbarYuksekligi(), istemciAlani.right, ToplamToolbarYuksekligi() + max(0, yukseklik) }; // Panel, toolbar'ın hemen altında, sağa yaslı konumlanır
         m_menuDenetleyici->put_Bounds(menuAlani);
+        MenuPaneliKoseleriniYuvarlaYap(menuAlani); // Pencere her yeniden boyutlandığında panelin konumu da değiştiği için, yuvarlak köşe kırpması da yeni konuma göre tekrar uygulanır
     }
 
     // İzin bildirim paneli gösterilecek bir istek varsa, pencere yeniden boyutlandığında onun da konumu güncel pencereye göre tekrar hesaplanır
@@ -2270,6 +2357,17 @@ void BrowserWindow::ToolbarMesajiIsle(const std::wstring& mesaj)
         aktifSekme->webView->Navigate(mesaj.substr(25).c_str()); // Önerilen adres, zaten tam ve geçerli olduğu için doğrudan gidilir, adres çubuğunun akıllı yorumlamasından geçmesine gerek yoktur
         OneriPaneliniKapat();
     }
+    else if (mesaj.rfind(L"addresssuggestion_navigate|", 0) == 0) // Eğer gelen komut, adres çubuğunda yukarı/aşağı ok tuşuna basıldığını bildiriyorsa
+    {
+        AdresOnerisiGezin(mesaj.substr(27));
+    }
+    else if (mesaj == L"addresssuggestion_confirm" && aktifSekme != nullptr) // Eğer gelen komut, Enter'a basıldığında klavyeyle seçili bir öneri olup olmadığının sorulmasıysa
+    {
+        if (!AdresOnerisiSeciliyiOnayla()) // Klavyeyle seçili bir satır yoksa, bu Enter basışı normal adres çubuğu gezinmesi olarak değerlendirilsin diye tarayıcı tarafına bildirilir
+        {
+            m_toolbarWebView->PostWebMessageAsString(L"{\"type\":\"addresssuggestion_notconfirmed\"}");
+        }
+    }
     else if (mesaj.rfind(L"site_paneli_izin_kaldir|", 0) == 0) // Eğer gelen komut, site bilgisi panelindeki bir izin kaydının kaldırılması isteğiyse
     {
         std::wstring tur = mesaj.substr(24); // "site_paneli_izin_kaldir|" önekinden sonraki izin türü alınır
@@ -2293,6 +2391,12 @@ void BrowserWindow::ToolbarMesajiIsle(const std::wstring& mesaj)
     else if (mesaj == L"get_theme") // Eğer toolbar arayüzü sayfası yeni yüklendiği için güncel temayı istiyorsa
     {
         TemayiToolbaraGonder(); // Kayıtlı tema ayarları toolbar arayüzüne gönderilir
+    }
+    else if (mesaj == L"get_tabs") // Eğer toolbar arayüzü sayfası yeni yüklendiği için güncel sekme listesini istiyorsa
+    {
+        // Program açılışında native taraf, toolbar sayfası yüklenmeden önce ilk sekmeyi oluşturup SekmeListesiniGonder çağırabiliyor, bu durumda o ilk mesaj kaybolur
+        // Toolbar sayfası kendi yüklenmesi bittiğinde bu isteği gönderir, bu sayede güncel liste hiçbir zaman eksik kalmaz
+        SekmeListesiniGonder(); // Güncel sekme listesi, aktif sekme bilgisiyle birlikte toolbar arayüzüne (yeniden) gönderilir
     }
     else if (mesaj == L"get_bookmarkbar") // Eğer toolbar arayüzü sayfası yeni yüklendiği için güncel yer imi çubuğu içeriğini istiyorsa
     {
@@ -2635,6 +2739,14 @@ void BrowserWindow::DahiliSayfaMesajiIsle(int sekmeId, const std::wstring& mesaj
     {
         YeniSekmeArkaPlaniniGonder(sekmeId);
     }
+    else if (mesaj == L"get_backgroundgallery") // Ayarlar sayfası, "resimler" klasöründeki seçilebilir fotoğrafların listesini istiyorsa
+    {
+        ArkaPlanGalerisiniGonder(sekmeId);
+    }
+    else if (mesaj.rfind(L"set_newtab_background_frompath|", 0) == 0) // Kullanıcı, galerideki bir resme tıklayarak onu arka plan seçtiyse
+    {
+        KlasordenArkaPlanSec(sekmeId, mesaj.substr(32));
+    }
     else if (mesaj.rfind(L"set_theme|", 0) == 0) // Tema (vurgu rengi, sekme yoğunluğu, yazı boyutu) değiştiriliyorsa
     {
         std::wstring veriJson = mesaj.substr(10); // "set_theme|" önekinden sonraki küçük JSON nesnesi alınır
@@ -2794,6 +2906,14 @@ void BrowserWindow::DahiliSayfaMesajiIsle(int sekmeId, const std::wstring& mesaj
     else if (mesaj.rfind(L"switch_profile|", 0) == 0) // Başka bir profile geçilmek isteniyorsa (boş isim, varsayılan/profilsiz moda geçiş demektir)
     {
         ProfileGecisYapVeYenidenBaslat(mesaj.substr(15));
+    }
+    else if (mesaj.rfind(L"create_profile|", 0) == 0) // Yeni bir profil oluşturulmak isteniyorsa, geçişten önce Windows şifresi istenir
+    {
+        if (Guvenlik::WindowsSifresiDogrula(m_pencere)) { ProfileGecisYapVeYenidenBaslat(mesaj.substr(15)); }
+    }
+    else if (mesaj.rfind(L"delete_profile|", 0) == 0) // Bir profilin kalıcı olarak silinmesi isteniyorsa, Windows şifresi istenir
+    {
+        ProfiliSil(sekmeId, mesaj.substr(15));
     }
     else if (mesaj.rfind(L"remove_extension|", 0) == 0) // Bir uzantının kaldırılması isteniyorsa
     {
@@ -3151,6 +3271,70 @@ void BrowserWindow::MenuyeMesajGonder(const std::wstring& mesaj)
     {
         m_menuWebView->PostWebMessageAsString(mesaj.c_str());
     }
+}
+
+// EnumChildWindows'a verilen geri çağırma, aranan pencereyi bulduğunda bu yapı üzerinden sonucu dışarı taşır
+struct MenuPenceresiAramaBaglami
+{
+    RECT hedefAlaniEkranKoordinati; // Menü panelinin, ekran koordinatlarına çevrilmiş beklenen konum ve boyutu
+    HWND bulunanPencere = nullptr; // Eşleşen pencere bulununca buraya yazılır
+};
+
+// Bu geri çağırma, pencerenin alt pencerelerini tek tek gezip WebView2'nin kendi iç pencere sınıfından olan ve konumu/boyutu menü paneliyle eşleşeni arar
+static BOOL CALLBACK MenuPenceresiAra(HWND aday, LPARAM lp)
+{
+    MenuPenceresiAramaBaglami* baglam = reinterpret_cast<MenuPenceresiAramaBaglami*>(lp);
+
+    wchar_t sinifAdi[64] = {};
+    GetClassNameW(aday, sinifAdi, 64);
+    if (wcsstr(sinifAdi, L"Chrome_WidgetWin") == nullptr) // WebView2'nin render ettiği her denetleyici, bu sınıf adını taşıyan kendi alt penceresini oluşturur
+    {
+        return TRUE; // Bu aday uygun sınıfta değil, aramaya devam edilir
+    }
+
+    RECT adayAlani;
+    GetWindowRect(aday, &adayAlani); // Bu pencerenin EKRANDAKİ gerçek konumu ve boyutu alınır
+
+    // Konum ve boyut, birkaç pikseli aşmayan bir toleransla karşılaştırılır; aynı anda birden fazla WebView2 denetleyicisi (toolbar, aktif sekme, devtools, menü) aynı ana pencerenin altında olduğu için sadece BOYUT değil KONUM da eşleşmelidir
+    if (abs(adayAlani.left - baglam->hedefAlaniEkranKoordinati.left) <= 2 &&
+        abs(adayAlani.top - baglam->hedefAlaniEkranKoordinati.top) <= 2 &&
+        abs((adayAlani.right - adayAlani.left) - (baglam->hedefAlaniEkranKoordinati.right - baglam->hedefAlaniEkranKoordinati.left)) <= 2 &&
+        abs((adayAlani.bottom - adayAlani.top) - (baglam->hedefAlaniEkranKoordinati.bottom - baglam->hedefAlaniEkranKoordinati.top)) <= 2)
+    {
+        baglam->bulunanPencere = aday;
+        return FALSE; // Eşleşme bulundu, aramayı durdur
+    }
+    return TRUE; // Bu aday eşleşmedi, aramaya devam edilir
+}
+
+// Bu fonksiyon, menü panelinin WebView2'sinin gerçek alt penceresini bulup üzerine yuvarlak köşeli bir SetWindowRgn uygular
+// menu.css'teki border-radius sadece ÇİZİMİ yuvarlatır, pencerenin GERÇEK dikdörtgen sınırını değiştirmez; bu yüzden köşelerde eski köşeli pencerenin kendisi görünmeye devam ederdi
+// Bu fonksiyon o gerçek pencereyi de aynı yarıçapla kırparak, köşelerin dışında kalan kısmın hiç çizilmemesini (altında kalan içerik sekmesinin görünmesini) sağlar
+void BrowserWindow::MenuPaneliKoseleriniYuvarlaYap(const RECT& menuAlaniIstemciKoordinati)
+{
+    int genislik = menuAlaniIstemciKoordinati.right - menuAlaniIstemciKoordinati.left;
+    int yukseklik = menuAlaniIstemciKoordinati.bottom - menuAlaniIstemciKoordinati.top;
+    if (genislik <= 0 || yukseklik <= 0) // Pencere o kadar küçültülmüş ki panel için hiç yer kalmamış, uygulanacak bir şey yok
+    {
+        return;
+    }
+
+    RECT hedefAlaniEkranKoordinati = menuAlaniIstemciKoordinati; // İstemci koordinatları, pencere penceresini aramak için ekran koordinatına çevrilecek
+    MapWindowPoints(m_pencere, nullptr, reinterpret_cast<POINT*>(&hedefAlaniEkranKoordinati), 2); // İki köşe noktası (sol-üst, sağ-alt) tek seferde ekran koordinatına çevrilir
+
+    MenuPenceresiAramaBaglami baglam;
+    baglam.hedefAlaniEkranKoordinati = hedefAlaniEkranKoordinati;
+    EnumChildWindows(m_pencere, MenuPenceresiAra, reinterpret_cast<LPARAM>(&baglam));
+    if (baglam.bulunanPencere == nullptr) // Pencere henüz oluşmamış olabilir (örn. denetleyici daha yeni yaratıldı), bir dahaki boyut güncellemesinde tekrar denenecek
+    {
+        return;
+    }
+
+    UINT dpi = GetDpiForWindow(m_pencere); // Yarıçap, CSS pikseli olan menu.css'teki 14px ile görsel olarak örtüşsün diye güncel DPI ölçeğine göre büyütülür
+    int yaricap = MulDiv(14, static_cast<int>(dpi), 96) * 2; // CreateRoundRectRgn, yarıçapı değil köşe ELİPSİNİN çapını ister, bu yüzden ikiyle çarpılır
+
+    HRGN bolge = CreateRoundRectRgn(0, 0, genislik + 1, yukseklik + 1, yaricap, yaricap); // Sağ/alt sınır CreateRoundRectRgn'de hariç tutulduğu için +1 ile tam pencereyi kapsaması sağlanır
+    SetWindowRgn(baglam.bulunanPencere, bolge, TRUE); // Bölge pencereye atanır (sahipliği pencereye geçer, ayrıca DeleteObject çağırmaya gerek yoktur) ve hemen yeniden çizilir
 }
 
 // Bu fonksiyon, hamburger menü panelini açar: boyutunu/konumunu hesaplayıp görünür yapar, güncel RAM ve yakınlaştırma bilgisini gönderir
@@ -3681,6 +3865,10 @@ void BrowserWindow::AdresOnerileriniGosterVeGonder(const std::wstring& mesaj)
         return;
     }
 
+    m_oneriSecilenIndeks = -1; // Liste her yenilendiğinde, önceki yazımdan kalan klavye seçimi geçersizdir
+    m_oneriSeciliAdresler.clear();
+    for (const OneriKaydi& kayit : oneriler) { m_oneriSeciliAdresler.push_back(kayit.adres); } // Hesap sonucu satırı hariç, sırayla her satırın adresi burada tutulur
+
     int toplamSatirSayisi = static_cast<int>(oneriler.size()) + (hesapSonucu.empty() ? 0 : 1); // Hesap sonucu varsa, panel bir satır daha fazla yer kaplar
     RECT istemciAlani;
     GetClientRect(m_pencere, &istemciAlani);
@@ -3702,7 +3890,7 @@ void BrowserWindow::AdresOnerileriniGosterVeGonder(const std::wstring& mesaj)
         onerilerJson += L"{\"address\":\"" + JsonIcinKacisla(oneriler[i].adres) + L"\",\"title\":\"" + JsonIcinKacisla(oneriler[i].baslik) + L"\"}";
     }
     onerilerJson += L"]";
-    m_oneriWebView->PostWebMessageAsString((L"{\"type\":\"addresssuggestions\",\"entries\":" + onerilerJson + L"}").c_str());
+    m_oneriWebView->PostWebMessageAsString((L"{\"type\":\"addresssuggestions\",\"query\":\"" + JsonIcinKacisla(sorgu) + L"\",\"entries\":" + onerilerJson + L"}").c_str());
 
     m_oneriPaneliAcikMi = true;
     m_oneriDenetleyici->put_IsVisible(TRUE);
@@ -3712,10 +3900,45 @@ void BrowserWindow::AdresOnerileriniGosterVeGonder(const std::wstring& mesaj)
 void BrowserWindow::OneriPaneliniKapat()
 {
     m_oneriPaneliAcikMi = false;
+    m_oneriSecilenIndeks = -1; // Panel kapanınca, bir dahaki açılışta önceki klavye seçiminin kalıntısı kalmasın diye sıfırlanır
     if (m_oneriDenetleyici != nullptr)
     {
         m_oneriDenetleyici->put_IsVisible(FALSE);
     }
+}
+
+// Bu fonksiyon, adres çubuğunda yukarı/aşağı ok tuşuna basıldığında öneri panelindeki klavye seçimini bir satır ileri/geri taşır, panel kapalıysa veya hiç öneri yoksa hiçbir şey yapmaz
+void BrowserWindow::AdresOnerisiGezin(const std::wstring& yon)
+{
+    if (!m_oneriPaneliAcikMi || m_oneriSeciliAdresler.empty()) { return; }
+
+    int satirSayisi = static_cast<int>(m_oneriSeciliAdresler.size());
+    if (yon == L"down")
+    {
+        m_oneriSecilenIndeks = min(m_oneriSecilenIndeks + 1, satirSayisi - 1); // Son satırdan öteye geçilmez
+    }
+    else if (yon == L"up")
+    {
+        m_oneriSecilenIndeks = max(m_oneriSecilenIndeks - 1, -1); // -1, hiçbir satırın seçili olmadığı, adres çubuğundaki orijinal yazının geçerli olduğu durumu temsil eder
+    }
+
+    if (m_oneriWebView != nullptr)
+    {
+        m_oneriWebView->PostWebMessageAsString((L"{\"type\":\"addresssuggestions_select\",\"index\":" + std::to_wstring(m_oneriSecilenIndeks) + L"}").c_str());
+    }
+}
+
+// Bu fonksiyon, Enter'a basıldığında öneri panelinde klavyeyle seçili bir satır varsa ona gider ve true döner, hiçbir satır seçili değilse hiçbir şey yapmadan false döner
+bool BrowserWindow::AdresOnerisiSeciliyiOnayla()
+{
+    if (!m_oneriPaneliAcikMi || m_oneriSecilenIndeks < 0 || m_oneriSecilenIndeks >= static_cast<int>(m_oneriSeciliAdresler.size())) { return false; }
+
+    SekmeBilgisi* aktifSekme = AktifSekmeyiAl();
+    if (aktifSekme == nullptr) { return false; }
+
+    aktifSekme->webView->Navigate(m_oneriSeciliAdresler[m_oneriSecilenIndeks].c_str()); // Klavyeyle seçilen öneri, tıklamadaki ile aynı şekilde doğrudan adrese gider
+    OneriPaneliniKapat();
+    return true;
 }
 
 // Bu fonksiyon, WebView2'nin ham sertifika hatası durumunu, kullanıcıya gösterilecek sade bir Türkçe açıklamaya çevirir
@@ -3878,6 +4101,129 @@ static std::vector<std::wstring> ResimlerKlasorunuTara(const std::wstring& klaso
         FindClose(arama);
     }
     return resimYollari;
+}
+
+// Bu fonksiyon, verilen kaynak resmi WIC (Windows Imaging Component) ile okuyup, en uzun kenarı azamiKenar pikseli aşmayacak şekilde küçültür ve JPEG olarak hedef dosyaya yazar
+// Galeri karelerinde orijinal 2-6 MB'lık fotoğrafları tam çözünürlükte göstermek arayüzü ciddi şekilde kasıyordu, bu fonksiyon sayesinde her fotoğraf için küçük, tek seferlik bir önizleme dosyası diske yazılır ve bir daha hiç yeniden hesaplanmaz
+static bool KucukOnizlemeOlustur(const std::wstring& kaynakYol, const std::wstring& hedefYol, UINT azamiKenar)
+{
+    ComPtr<IWICImagingFactory> fabrika;
+    if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&fabrika)))) { return false; }
+
+    ComPtr<IWICBitmapDecoder> cozucu;
+    if (FAILED(fabrika->CreateDecoderFromFilename(kaynakYol.c_str(), nullptr, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &cozucu))) { return false; }
+
+    ComPtr<IWICBitmapFrameDecode> kare;
+    if (FAILED(cozucu->GetFrame(0, &kare))) { return false; }
+
+    UINT genislik = 0, yukseklik = 0;
+    kare->GetSize(&genislik, &yukseklik);
+    if (genislik == 0 || yukseklik == 0) { return false; }
+
+    double olcek = static_cast<double>(azamiKenar) / static_cast<double>(genislik > yukseklik ? genislik : yukseklik);
+    UINT yeniGenislik = (olcek < 1.0) ? static_cast<UINT>(genislik * olcek) : genislik; // Resim azami kenardan zaten küçükse büyütülmez, olduğu gibi kopyalanır
+    UINT yeniYukseklik = (olcek < 1.0) ? static_cast<UINT>(yukseklik * olcek) : yukseklik;
+    if (yeniGenislik < 1) { yeniGenislik = 1; }
+    if (yeniYukseklik < 1) { yeniYukseklik = 1; }
+
+    ComPtr<IWICBitmapScaler> olcekleyici;
+    if (FAILED(fabrika->CreateBitmapScaler(&olcekleyici))) { return false; }
+    if (FAILED(olcekleyici->Initialize(kare.Get(), yeniGenislik, yeniYukseklik, WICBitmapInterpolationModeFant))) { return false; } // Fant filtresi, küçültmede en kaliteli (ama hâlâ hızlı) sonucu verir
+
+    ComPtr<IWICFormatConverter> donusturucu;
+    if (FAILED(fabrika->CreateFormatConverter(&donusturucu))) { return false; }
+    if (FAILED(donusturucu->Initialize(olcekleyici.Get(), GUID_WICPixelFormat24bppBGR, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom))) { return false; } // JPEG kodlayıcısının beklediği düz 24bpp BGR formatına çevrilir
+
+    ComPtr<IWICStream> akis;
+    if (FAILED(fabrika->CreateStream(&akis))) { return false; }
+    if (FAILED(akis->InitializeFromFilename(hedefYol.c_str(), GENERIC_WRITE))) { return false; }
+
+    ComPtr<IWICBitmapEncoder> kodlayici;
+    if (FAILED(fabrika->CreateEncoder(GUID_ContainerFormatJpeg, nullptr, &kodlayici))) { return false; }
+    if (FAILED(kodlayici->Initialize(akis.Get(), WICBitmapEncoderNoCache))) { return false; }
+
+    ComPtr<IWICBitmapFrameEncode> kareKodlama;
+    ComPtr<IPropertyBag2> ozellikCantasi;
+    if (FAILED(kodlayici->CreateNewFrame(&kareKodlama, &ozellikCantasi))) { return false; }
+
+    if (ozellikCantasi != nullptr) // JPEG kalitesi, önizleme için yeterli ama dosyayı küçük tutacak bir orta seviyeye ayarlanır
+    {
+        PROPBAG2 secenek = {};
+        secenek.pstrName = const_cast<LPOLESTR>(L"ImageQuality");
+        VARIANT deger;
+        VariantInit(&deger);
+        deger.vt = VT_R4;
+        deger.fltVal = 0.75f;
+        ozellikCantasi->Write(1, &secenek, &deger);
+    }
+
+    if (FAILED(kareKodlama->Initialize(ozellikCantasi.Get()))) { return false; }
+    if (FAILED(kareKodlama->SetSize(yeniGenislik, yeniYukseklik))) { return false; }
+    WICPixelFormatGUID format = GUID_WICPixelFormat24bppBGR;
+    if (FAILED(kareKodlama->SetPixelFormat(&format))) { return false; }
+    if (FAILED(kareKodlama->WriteSource(donusturucu.Get(), nullptr))) { return false; }
+    if (FAILED(kareKodlama->Commit())) { return false; }
+    if (FAILED(kodlayici->Commit())) { return false; }
+
+    return true;
+}
+
+// Bu fonksiyon, "resimler" klasöründeki tüm resimlerin dosya adlarını, Ayarlar sayfasındaki galerinin çizebilmesi için JSON olarak gönderir
+// Resimlerin kendisi hiç Base64'e çevrilip JSON içine gömülmez (bu, onlarca megabaytlık tek bir mesaj demek olurdu); galeride gösterilen küçük önizlemeler de, orijinal fotoğraflar yerine ".thumbs" alt klasöründeki 128x128 kopyalardan (yoksa KucukOnizlemeOlustur ile ilk burada üretilip diske yazılır) servis edilir, böylece galeri her açıldığında megabaytlarca orijinal fotoğraf decode edilip arayüz kasmaz
+void BrowserWindow::ArkaPlanGalerisiniGonder(int sekmeId)
+{
+    std::wstring klasor = ResimlerKlasorunuBul();
+    std::vector<std::wstring> yollar = klasor.empty() ? std::vector<std::wstring>() : ResimlerKlasorunuTara(klasor);
+
+    std::wstring onizlemeKlasoru = klasor.empty() ? L"" : (klasor + L"\\.thumbs"); // Küçük önizlemelerin tutulduğu, galeri taramasının asla göremediği (çünkü bir klasördür) gizli alt klasör
+    if (!onizlemeKlasoru.empty()) { CreateDirectoryW(onizlemeKlasoru.c_str(), nullptr); }
+
+    std::wstring listeMetni = L"[";
+    for (size_t i = 0; i < yollar.size(); i++)
+    {
+        size_t ayracKonumu = yollar[i].find_last_of(L'\\');
+        std::wstring dosyaAdi = (ayracKonumu == std::wstring::npos) ? yollar[i] : yollar[i].substr(ayracKonumu + 1);
+
+        std::wstring onizlemeAdi = dosyaAdi + L".jpg"; // Önizleme her zaman JPEG olarak kaydedilir, orijinal uzantı ne olursa olsun (örn "foto.png.jpg"), çakışma riski olmadan tek bir biçime sabitlenir
+        std::wstring onizlemeYolu = onizlemeKlasoru + L"\\" + onizlemeAdi;
+
+        WIN32_FIND_DATAW onizlemeBilgisi;
+        HANDLE onizlemeTanitici = FindFirstFileW(onizlemeYolu.c_str(), &onizlemeBilgisi);
+        bool onizlemeVarMi = (onizlemeTanitici != INVALID_HANDLE_VALUE);
+        if (onizlemeVarMi) { FindClose(onizlemeTanitici); }
+
+        if (!onizlemeVarMi) // Bu fotoğrafın önizlemesi daha önce üretilmediyse, şimdi üretilip diske yazılır, bir sonraki açılışta bu adım hiç çalışmaz
+        {
+            onizlemeVarMi = KucukOnizlemeOlustur(yollar[i], onizlemeYolu, 128);
+        }
+
+        if (i > 0) { listeMetni += L","; }
+        listeMetni += L"{\"name\":\"" + JsonIcinKacisla(dosyaAdi) + L"\",\"thumb\":\"" + JsonIcinKacisla(onizlemeVarMi ? (L".thumbs/" + onizlemeAdi) : dosyaAdi) + L"\"}"; // Önizleme üretilemediyse (örn bozuk dosya), son çare olarak orijinal gösterilir
+    }
+    listeMetni += L"]";
+
+    SekmeyeMesajGonder(sekmeId, L"{\"type\":\"backgroundgallery\",\"images\":" + listeMetni + L"}");
+}
+
+// Bu fonksiyon, kullanıcı Ayarlar sayfasındaki galeriden bir resme tıkladığında, o resmi yeni sekme arka planı olarak kaydeder
+void BrowserWindow::KlasordenArkaPlanSec(int sekmeId, const std::wstring& dosyaAdiHam)
+{
+    // Dosya adı, doğrudan bir klasör yoluyla birleştirileceği için, yol gezinme riskine karşı ters eğik çizgi, iki nokta gibi karakterler elenir, sadece gerçek bir dosya adında bulunabilecek karakterlere izin verilir
+    std::wstring dosyaAdi;
+    for (wchar_t karakter : dosyaAdiHam)
+    {
+        if (iswalnum(karakter) || karakter == L'_' || karakter == L'-' || karakter == L'.' || karakter == L' ') { dosyaAdi += karakter; }
+    }
+    if (dosyaAdi.empty()) { return; }
+
+    std::wstring klasor = ResimlerKlasorunuBul();
+    if (klasor.empty()) { return; }
+
+    AyarVerisi ayarlar = Ayarlar::Oku();
+    ayarlar.yeniSekmeArkaPlanYolu = klasor + L"\\" + dosyaAdi; // Galeriden seçilen resmin tam yolu, kullanıcının kendi dosyasını seçtiğindeki gibi aynı alana kaydedilir
+    Ayarlar::Kaydet(ayarlar);
+    AyarlarIcinVeriGonder(sekmeId, L"settings"); // Güncel ayarlar, Ayarlar sekmesine geri gönderilir
+    YeniSekmeArkaPlaniniTumSekmelereGonder(); // Şu an açık olan hızlı erişim sekmeleri de yeni arka planı anında gösterir
 }
 
 // Bu fonksiyon, resimler klasöründeki resim dosyalarından birini "torba" (shuffle-bag) yöntemiyle seçer: m_gosterilmemisArkaPlanlar listesindeki tüm resimler, bir sonraki resim seçilmeden önce HEPSİ birer birer tüketilir, böylece klasörde beş resim varsa, altıncı seçime kadar hiçbiri ikinci kez tekrarlanmaz; torba boşalınca (veya klasördeki resim sayısı değiştiyse, örneğin kullanıcı yeni resim ekleyip sildiyse) klasör yeniden taranıp torba baştan doldurulur
@@ -4163,7 +4509,7 @@ void BrowserWindow::SekmeListesiniGonder()
             sekmelerMetni += L","; // Sekmeleri birbirinden ayırmak için virgül eklenir
         }
         // Her sekme, kimlik numarası, başlık, yükleniyor durumu, uykuda olup olmadığı ve gizli olup olmadığı bilgisini içeren bir JSON nesnesi olarak yazılır
-        sekmelerMetni += L"{\"id\":" + std::to_wstring(m_sekmeler[i]->id) + L",\"title\":\"" + JsonIcinKacisla(m_sekmeler[i]->baslik) + L"\",\"loading\":" + (m_sekmeler[i]->yukleniyor ? L"true" : L"false") + L",\"suspended\":" + (m_sekmeler[i]->askidaMi ? L"true" : L"false") + L",\"private\":" + (m_sekmeler[i]->gizliMi ? L"true" : L"false") + L",\"pinned\":" + (m_sekmeler[i]->sabitliMi ? L"true" : L"false") + L",\"muted\":" + (m_sekmeler[i]->sessizeAlindiMi ? L"true" : L"false") + L",\"playingAudio\":" + (m_sekmeler[i]->sesCaliyorMu ? L"true" : L"false") + L",\"groupId\":" + std::to_wstring(m_sekmeler[i]->grupId) + L"}";
+        sekmelerMetni += L"{\"id\":" + std::to_wstring(m_sekmeler[i]->id) + L",\"title\":\"" + JsonIcinKacisla(m_sekmeler[i]->baslik) + L"\",\"loading\":" + (m_sekmeler[i]->yukleniyor ? L"true" : L"false") + L",\"suspended\":" + (m_sekmeler[i]->askidaMi ? L"true" : L"false") + L",\"private\":" + (m_sekmeler[i]->gizliMi ? L"true" : L"false") + L",\"pinned\":" + (m_sekmeler[i]->sabitliMi ? L"true" : L"false") + L",\"muted\":" + (m_sekmeler[i]->sessizeAlindiMi ? L"true" : L"false") + L",\"playingAudio\":" + (m_sekmeler[i]->sesCaliyorMu ? L"true" : L"false") + L",\"groupId\":" + std::to_wstring(m_sekmeler[i]->grupId) + L",\"favicon\":\"" + m_sekmeler[i]->favicon + L"\"}"; // Favicon zaten base64 bir veri adresi olduğu için JSON kaçışına ihtiyaç duymaz
     }
     sekmelerMetni += L"]"; // JSON dizisinin kapanış köşeli parantezi eklenir
 
@@ -5140,6 +5486,36 @@ void BrowserWindow::ProfileGecisYapVeYenidenBaslat(const std::wstring& profilAdi
     PostMessage(m_pencere, WM_CLOSE, 0, 0); // Yeni süreç başlatıldığına göre, bu (eski profildeki) pencerenin normal kapanma süreci başlatılır
 }
 
+// Bu fonksiyon, Windows şifresiyle doğrulandıktan sonra verilen profilin klasörünü (ve içindeki tüm WebView2 verisini) kalıcı olarak siler, aktif profil silinemez
+void BrowserWindow::ProfiliSil(int sekmeId, const std::wstring& profilAdiHam)
+{
+    // Profil adı, doğrudan bir klasör adı olarak kullanılacağı için, yol gezinme veya özel karakter riskine karşı sadece harf/rakam/alt çizgi/tire içermesine izin verilir
+    std::wstring profilAdi;
+    for (wchar_t karakter : profilAdiHam)
+    {
+        if (iswalnum(karakter) || karakter == L'_' || karakter == L'-') { profilAdi += karakter; }
+    }
+    if (profilAdi.empty() || profilAdi == AktifProfilAdiReferansi()) { return; } // Boş isim (varsayılan mod) veya şu an aktif olan profil asla silinemez
+
+    if (!Guvenlik::WindowsSifresiDogrula(m_pencere)) { return; } // Silme kalıcı ve geri alınamaz bir işlem olduğu için, devam etmeden önce Windows şifresi istenir
+
+    std::wstring klasorYolu = KokVeriKlasoruAl() + L"\\profiller\\" + profilAdi;
+
+    // SHFileOperationW'nin istediği gibi, yol çift sonlandırıcı null ile biten, değiştirilebilir bir tampon olarak hazırlanır
+    std::vector<wchar_t> yolTamponu(klasorYolu.begin(), klasorYolu.end());
+    yolTamponu.push_back(L'\0');
+    yolTamponu.push_back(L'\0');
+
+    SHFILEOPSTRUCTW silmeIslemi = {};
+    silmeIslemi.wFunc = FO_DELETE;
+    silmeIslemi.pFrom = yolTamponu.data();
+    silmeIslemi.fFlags = FOF_NO_UI | FOF_NOERRORUI | FOF_SILENT; // Geri dönüşüm kutusu sorgusu, ilerleme penceresi ve hata diyalogları olmadan sessizce silinir
+
+    SHFileOperationW(&silmeIslemi); // Klasör ve içindeki tüm WebView2 verisi (çerezler, geçmiş, önbellek) kalıcı olarak silinir
+
+    ProfilListesiniGonder(sekmeId); // Güncellenmiş profil listesi, silme işleminin sonucunu yansıtsın diye hemen yeniden gönderilir
+}
+
 // Bu fonksiyon, verilen kimlikli uzantıyı kaldırır veya etkinliğini değiştirir
 void BrowserWindow::EklentiyiDegistir(int sekmeId, const std::wstring& eklentiId, const std::wstring& eylem)
 {
@@ -5424,8 +5800,8 @@ void BrowserWindow::BildirimSimgesiOlustur()
     bildirimVerisi.uID = 1;
     bildirimVerisi.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     bildirimVerisi.uCallbackMessage = BildirimSimgesiMesaji;
-    bildirimVerisi.hIcon = LoadIcon(nullptr, IDI_APPLICATION); // Programın henüz kendi özel bir simgesi (.ico) olmadığı için, Windows'un genel uygulama simgesi kullanılır
-    wcscpy_s(bildirimVerisi.szTip, L"Tarayıcı");
+    bildirimVerisi.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_APPICON)); // Programın gömülü simgesi kullanılır
+    wcscpy_s(bildirimVerisi.szTip, L"Yuinn");
     Shell_NotifyIcon(NIM_ADD, &bildirimVerisi);
 }
 

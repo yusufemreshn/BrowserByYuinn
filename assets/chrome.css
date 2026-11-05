@@ -5,6 +5,11 @@
 
 html, body {
     overflow: hidden; /* Toolbar arayüzünün kendi içinde kaydırma çubuğu çıkmaması için taşan içerik gizlenir */
+    user-select: none; /* Sekme şeridine çift tıklayınca (büyüt/eski haline döndür) metin seçimi tetiklenmesin diye, toolbar genelinde metin seçimi kapatılır */
+}
+
+input, textarea {
+    user-select: text; /* Adres çubuğu ve diğer girdi alanları, üstteki genel kapatmadan etkilenmemeli, kullanıcı yazdığını normal şekilde seçebilmeli */
 }
 
 body.yogunluk-kompakt #sekme-seridi { height: 34px; } /* Kompakt yoğunluk seçiliyse, sekme şeridi daha kısa olur */
@@ -80,7 +85,10 @@ body.yogunluk-kompakt #toolbar { height: 48px; } /* Kompakt yoğunlukta, navigas
     height: 14px; /* Favicon yer tutucusunun yüksekliği */
     border-radius: 4px; /* Köşeleri hafifçe yuvarlatılır */
     flex-shrink: 0; /* Sekme daraldığında favicon'un küçülmesi engellenir */
-    background: linear-gradient(135deg, var(--vurgu-rengi), color-mix(in srgb, var(--vurgu-rengi) 55%, transparent)); /* Gerçek bir site simgesi yokken, vurgu renginden türetilen basit bir yer tutucu gösterilir */
+    background-repeat: no-repeat; /* Favicon resmi tekrar etmeden tek kopya gösterilir */
+    background-position: center; /* Favicon resmi, kutunun tam ortasına yerleştirilir */
+    background-size: contain; /* Favicon resmi, oranı bozulmadan kutuya sığdırılır */
+    background-image: url("https://tarayici.local/app.ico"); /* Sitenin kendi favicon'u henüz gelmediyse veya hiç yoksa, bu varsayılan olarak programın kendi logosu gösterilir, chrome.js gerçek favicon geldiğinde bunun üzerine yazar */
 }
 
 .sekme-baslik {
@@ -140,6 +148,20 @@ body.yogunluk-kompakt #toolbar { height: 48px; } /* Kompakt yoğunlukta, navigas
 /* Sürüklenmekte olan sekme, taşınırken geride kalan "hayalet" gibi görünmesi için soluklaştırılır */
 .sekme.surukleniyor {
     opacity: 0.4;
+}
+
+/* Sürükleme sırasında DOM'da yer değiştiren sekmelerin "width" geçişi yeniden tetiklenmesin diye, tüm sürükleme boyunca geçişler kapatılır, aksi halde sekmeler dikeyde hafifçe zıplıyormuş gibi görünür */
+#sekmeler-kapsayici.surukleme-aktif .sekme {
+    transition: none;
+}
+
+/* Yeni açılan bir sekme, chrome.js tarafından ilk kurulduğunda bu sınıfı alır, hafifçe büyüyerek ve belirerek yerine oturur, böylece yeni sekme açmak da diğer öğeler gibi bir giriş hissi kazanır */
+.sekme.sekme-giris {
+    animation: sekme-belir 180ms var(--gecis-yumusak) backwards;
+}
+@keyframes sekme-belir {
+    from { opacity: 0; transform: scaleX(0.85) translateY(3px); }
+    to { opacity: 1; transform: scaleX(1) translateY(0); }
 }
 
 /* Bir sekme hâlâ yükleniyorsa, alt kenarında soldan sağa kayan ince bir ışık çizgisi belirir */
@@ -343,24 +365,89 @@ body.yogunluk-kompakt #toolbar { height: 48px; } /* Kompakt yoğunlukta, navigas
 
 /* Hamburger menü paneli artık chrome.html'in İÇİNDE bir <div> değil, kendi ayrı native WebView2 penceresinde (menu.html) gösteriliyor. */
 /* Bu panelin boyutu native tarafta (BrowserWindow.cpp, MenuPaneliGenisligi/MenuPaneliYuksekligi) zaten panelin kendi gerçek boyutu kadar ayarlandığı için, burada position/top/right gibi konumlama kurallarına gerek yok; bu kurallar sadece panelin KENDİ sayfasının (body.menu-sayfasi) iç düzenini belirler. */
+html:has(body.menu-sayfasi) {
+    background-color: transparent; /* tokens.css'teki html arka planı köşeli ve opaktır; panel yuvarlak köşeli görünsün diye bu sayfada boşluk saydam bırakılır, görünen rengi body.menu-sayfasi kendisi verir */
+}
 body.menu-sayfasi {
     display: flex; /* Menü öğelerinin alt alta dizilmesi için */
     flex-direction: column; /* Öğeler dikey olarak sıralanır */
     height: 100vh; /* Panel, kendisi için ayrılan native pencereyi tam doldurur */
     box-sizing: border-box; /* Padding, yüksekliğin dışına taşmaz */
-    padding: 8px; /* Panelin iç kenar boşluğu */
-    gap: 2px; /* Öğeler arasına ince bir boşluk eklenir */
-    background-color: var(--zemin-2); /* Panelin arka plan rengi, pasif sekmelerle aynı tonu kullanır */
+    padding: 10px; /* Panelin iç kenar boşluğu */
+    gap: 1px; /* Öğeler arasına ince bir boşluk eklenir, bölüm başlıkları kendi boşluğunu kendi getirir */
+    background: var(--zemin-1); /* Düz, tek tonlu koyu zemin, fotoğraftaki Brave menüsüyle aynı sade görünüm */
+    border: 1px solid var(--zemin-4); /* İnce bir çerçeve, saydam köşelerle birleşen kenarı belirginleştirir */
+    border-radius: 14px; /* Panelin dört köşesi de yuvarlatılır; native taraf artık bu panelin arka planını saydam yaptığı için köşelerin dışı eski köşeli dikdörtgeni değil, altındaki sayfayı gösterir */
     overflow-y: auto; /* İçerik, native pencerenin yüksekliğini aşarsa panelin kendi içinde kaydırılabilir olur */
+    overscroll-behavior: contain; /* Panel sonuna gelindiğinde kaydırma, altındaki sayfaya sızmaz */
+    animation: panel-acilis 190ms var(--gecis-yumusak) backwards; /* Panel, hamburger butonunun olduğu üst köşeden hafifçe büyüyerek belirir */
+    transform-origin: top right;
+}
+
+/* Hamburger menüsü, site paneli, izin/sertifika uyarıları gibi her ayrı native pencerede açılan panel, aynı giriş animasyonunu paylaşır */
+@keyframes panel-acilis {
+    from { opacity: 0; transform: scale(0.94) translateY(-6px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Menü öğeleri, panel açılırken yukarıdan aşağı sırayla, kısa bir gecikmeyle belirir */
+.menu-ogesi, #menu-ram-gostergesi, #menu-yakinlastir-satiri, .menu-bolum-basligi {
+    animation: menu-ogesi-belir 220ms var(--gecis-yumusak) backwards;
+}
+@keyframes menu-ogesi-belir {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+/* Gecikme, elle numaralanan nth-child yerine her öğenin DOM sırasına göre otomatik hesaplanır, böylece araya yeni satır eklense de sayaç bozulmaz */
+body.menu-sayfasi > * { animation-delay: calc(var(--menu-sira, 0) * 14ms); }
+body.menu-sayfasi > *:nth-child(1) { --menu-sira: 1; }
+body.menu-sayfasi > *:nth-child(2) { --menu-sira: 2; }
+body.menu-sayfasi > *:nth-child(3) { --menu-sira: 3; }
+body.menu-sayfasi > *:nth-child(4) { --menu-sira: 4; }
+body.menu-sayfasi > *:nth-child(5) { --menu-sira: 5; }
+body.menu-sayfasi > *:nth-child(6) { --menu-sira: 6; }
+body.menu-sayfasi > *:nth-child(7) { --menu-sira: 7; }
+body.menu-sayfasi > *:nth-child(8) { --menu-sira: 8; }
+body.menu-sayfasi > *:nth-child(n+9) { --menu-sira: 9; } /* 9. öğeden sonrası, gecikme fark edilmeyecek kadar kısaldığı için aynı değerde sabitlenir */
+
+.menu-ogesi {
+    transition: background-color 140ms ease, transform 140ms var(--gecis-yumusak), color 140ms ease; /* Hover'da hafif kayma da yumuşak geçsin diye transform geçişi eklenir */
+}
+.menu-ogesi:hover {
+    transform: translateX(3px); /* Fare üzerine geldiğinde öğe hafifçe sağa kayar, tıklanabilir hissini güçlendirir */
+}
+.menu-ogesi:active {
+    transform: translateX(3px) scale(0.98); /* Tıklanınca ek olarak hafif bir küçülme, dokunsal bir his verir */
+    transition-duration: 60ms; /* Basma anı, bırakmadan daha hızlı tepki vermeli, tıklamanın anında kaydedildiği hissini verir */
+}
+
+/* Bölüm başlıkları ("Sekmeler", "Kayıtlar", "Sayfa"), art arda gelen düz buton listesini anlamlı gruplara ayırır */
+.menu-bolum-basligi {
+    padding: 10px 10px 4px; /* Üstten biraz daha fazla boşluk, kendinden önceki gruptan ayrışsın diye */
+    color: var(--metin-soluk); /* İkincil bir etiket olduğu için soluk renk kullanılır */
+    font-size: 10.5px; /* Menü öğelerinden belirgin şekilde küçük tutulur */
+    font-weight: 700; /* Küçük punto, kalınlıkla telafi edilir, yoksa fark edilmez */
+    letter-spacing: 0.06em; /* Büyük harfli etiketler, harf aralığı artınca daha okunaklı görünür */
+    text-transform: uppercase; /* Küçük başlıklar, büyük harfle "etiket" hissi verir */
+}
+.menu-bolum-basligi:first-of-type {
+    padding-top: 2px; /* İlk başlık, üstündeki RAM çipine çok yapışmasın ama de gereksiz boşluk da bırakmasın */
 }
 
 #menu-ram-gostergesi {
-    padding: 8px 10px; /* Üst RAM göstergesinin iç boşluğu */
-    margin-bottom: 4px; /* Altındaki ilk menü öğesinden hafifçe ayrılır */
-    border-radius: 8px; /* Köşeleri hafifçe yuvarlatılır */
+    display: flex; /* Simge ve metnin yan yana durması için */
+    align-items: center; /* Dikeyde ortalanır */
+    gap: 8px; /* Simgeyle metin arasına boşluk eklenir */
+    padding: 9px 10px; /* Üst RAM göstergesinin iç boşluğu */
+    margin-bottom: 6px; /* Altındaki ilk bölümden hafifçe ayrılır */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık, çipi zeminden net ayırır */
+    border-radius: 9px; /* Köşeleri hafifçe yuvarlatılır */
     background-color: var(--zemin-3); /* Diğer öğelerden ayrışması için biraz daha açık bir zemin kullanılır */
     color: var(--metin-soluk); /* Yazı rengi, ikincil bir bilgi olduğu için soluk tutulur */
     font-size: 12.5px; /* Küçük, bilgilendirici bir yazı boyutu */
+}
+#menu-ram-gostergesi .menu-simge {
+    color: var(--metin-soluk); /* RAM simgesi, vurgu rengine değil çipin diğer metniyle aynı soluk tona uyar */
 }
 #menu-ram-deger {
     color: var(--vurgu-rengi); /* RAM değeri, dikkat çeksin diye vurgu renginde gösterilir */
@@ -368,11 +455,11 @@ body.menu-sayfasi {
 }
 
 .menu-ogesi {
-    display: flex; /* Metin ve kısayol etiketinin iki ucta durması için */
+    display: flex; /* Simge, metin ve kısayol etiketinin aynı satırda durması için */
     align-items: center; /* Dikeyde ortalanır */
-    justify-content: space-between; /* Başlık solda, kısayol sağda konumlanır */
+    gap: 10px; /* Simgeyle metin arasına boşluk eklenir */
     width: 100%; /* Öğe, menünün tüm genişliğini kaplar */
-    padding: 9px 10px; /* İç boşluk */
+    padding: 8px 10px; /* İç boşluk */
     border: none; /* Varsayılan kenarlık kaldırılır */
     border-radius: 8px; /* Köşeler yuvarlatılır */
     background-color: transparent; /* Normalde şeffaf bir arka plan kullanılır */
@@ -380,21 +467,44 @@ body.menu-sayfasi {
     font-size: 13.5px; /* Öğe metninin boyutu */
     text-align: left; /* Metin sola yaslanır */
     cursor: pointer; /* Fare öğenin üzerine geldiğinde el işaretçisi gösterilir */
-    transition: background-color 120ms ease; /* Hover durumu yumuşak geçişle olur */
     white-space: nowrap; /* Başlık metni, kısayol etiketiyle üst üste binmesin diye asla alt satıra kaymaz */
 }
 .menu-ogesi:hover {
     background-color: var(--zemin-3); /* Fare öğenin üzerine geldiğinde hafif bir arka plan belirir */
 }
+.menu-simge {
+    flex-shrink: 0; /* Metin uzun olduğunda simge sıkışıp küçülmez */
+    width: 16px; /* Tüm simgeler aynı kutu içinde, hizalı görünsün diye sabit genişlik */
+    height: 16px;
+    color: var(--metin-soluk); /* Simgeler, metinden biraz daha soluk, ikincil bir vurguda durur */
+    transition: color 140ms ease; /* Hover'da vurgu rengine geçiş yumuşak olsun diye */
+}
+.menu-ogesi:hover .menu-simge {
+    color: var(--vurgu-rengi); /* Fare üzerine geldiğinde simge, vurgu rengine döner, dikkat o satıra çekilir */
+}
+.menu-ogesi-metin {
+    flex: 1; /* Metin, kalan tüm alanı kaplar, kısayol etiketi sağa yaslanır */
+    overflow: hidden; /* Çok uzun bir başlık olursa panel genişliğini zorlamaz */
+    text-overflow: ellipsis; /* Taşan metin üç nokta ile kesilir */
+}
 .menu-kisayol {
     color: var(--metin-soluk); /* Kısayol etiketi, ana metinden daha soluk gösterilir */
-    font-size: 11.5px; /* Kısayol etiketi, ana metinden daha küçük gösterilir */
+    font-size: 11px; /* Kısayol etiketi, ana metinden daha küçük gösterilir */
     font-family: "Cascadia Code", ui-monospace, Consolas, monospace; /* Kısayol, tuş kombinasyonu hissi versin diye sabit genişlikli yazı tipiyle gösterilir */
+}
+
+/* "Çıkış" gibi geri dönüşü olmayan/dikkat gerektiren öğeler, listenin geri kalanından renkçe hafifçe ayrışır */
+.menu-ogesi-tehlikeli:hover {
+    background-color: color-mix(in srgb, #ef4444 16%, var(--zemin-3)); /* Hover'da kırmızımsı bir ton karışır, "dikkatli ol" hissi verir */
+}
+.menu-ogesi-tehlikeli:hover .menu-simge,
+.menu-ogesi-tehlikeli:hover .menu-ogesi-metin {
+    color: #ef4444; /* Simge ve metin, sadece hover'da kırmızıya döner, sürekli göz tırmalamaz */
 }
 
 .menu-ayrac {
     height: 1px; /* İnce bir çizgi */
-    margin: 4px 6px; /* Üstten/alttan ve kenarlardan küçük bir boşluk */
+    margin: 6px 6px; /* Üstten/alttan ve kenarlardan küçük bir boşluk */
     background-color: var(--zemin-4); /* Çizginin rengi, diğer kenarlıklarla tutarlı */
 }
 
@@ -402,9 +512,17 @@ body.menu-sayfasi {
     display: flex; /* Başlık ve kontrol grubunun iki ucta durması için */
     align-items: center; /* Dikeyde ortalanır */
     justify-content: space-between; /* "Yakınlaştır" yazısı solda, kontroller sağda konumlanır */
-    padding: 6px 10px; /* İç boşluk */
+    padding: 8px 10px; /* İç boşluk */
     color: var(--metin); /* Başlık metninin rengi */
     font-size: 13.5px; /* Başlık metninin boyutu, diğer menü öğeleriyle tutarlı */
+}
+.menu-yakinlastir-etiket {
+    display: flex; /* Simge ve "Yakınlaştır" yazısının yan yana durması için */
+    align-items: center; /* Dikeyde ortalanır */
+    gap: 10px; /* Simgeyle metin arasına, diğer menü öğeleriyle aynı boşluk bırakılır */
+}
+.menu-yakinlastir-etiket .menu-simge {
+    color: var(--metin-soluk); /* Bu satır bir buton olmadığı için simge hep soluk tonda durur, hover rengi devreye girmez */
 }
 #menu-yakinlastir-kontrolleri {
     display: flex; /* Eksi, yüzde ve artı öğelerinin yan yana dizilmesi için */
@@ -420,9 +538,14 @@ body.menu-sayfasi {
     color: var(--metin); /* Buton simgesinin rengi */
     font-size: 13px; /* Buton simgesinin boyutu */
     cursor: pointer; /* Fare butonun üzerine geldiğinde el işaretçisi gösterilir */
+    transition: background-color 120ms ease, transform 120ms var(--gecis-yumusak); /* Hover ve basma geçişleri yumuşak olsun diye */
 }
 #menu-yakinlastir-kontrolleri button:hover {
-    background-color: var(--zemin-4); /* Fare butonun üzerine geldiğinde biraz daha belirgin bir arka plan oluşur */
+    background-color: var(--vurgu-rengi); /* Fare butonun üzerine geldiğinde, diğer öğelerle tutarlı olarak vurgu rengi belirir */
+    color: #fff; /* Vurgu renginin üzerinde metin her zaman okunaklı kalsın diye beyaza döner */
+}
+#menu-yakinlastir-kontrolleri button:active {
+    transform: scale(0.9); /* Basınca küçük bir sıkışma, tıklamanın algılandığı hissini verir */
 }
 #menu-yakinlastir-yuzde {
     min-width: 38px; /* Yüzde metni, farklı değerlerde (örneğin %90 ile %150) kontrollerin yerinin oynamaması için sabit bir genişlikte tutulur */
@@ -441,6 +564,7 @@ body.izin-sayfasi {
     padding: 16px; /* Panelin iç kenar boşluğu */
     gap: 10px; /* Öğeler arasına boşluk eklenir */
     background-color: var(--zemin-2); /* Panelin arka plan rengi, menü paneliyle tutarlı */
+    animation: panel-acilis 160ms var(--gecis-yumusak) backwards; /* Menü paneliyle aynı giriş hissi */
 }
 #izin-site-adi {
     font-weight: 600; /* Site adı, panelin en belirgin öğesi olduğu için kalın gösterilir */
@@ -507,6 +631,7 @@ body.site-paneli-sayfasi {
     gap: 10px; /* Öğeler arasına boşluk eklenir */
     background-color: var(--zemin-2); /* Panelin arka plan rengi, diğer panellerle tutarlı */
     overflow-y: auto; /* İzin listesi uzunsa, panel kendi içinde kaydırılır */
+    animation: panel-acilis 160ms var(--gecis-yumusak) backwards; /* Menü paneliyle aynı giriş hissi */
 }
 #site-paneli-adres {
     font-weight: 600; /* Sitenin alan adı, panelin en belirgin öğesi olduğu için kalın gösterilir */
@@ -587,6 +712,7 @@ body.sertifika-sayfasi {
     padding: 18px; /* Panelin iç kenar boşluğu */
     gap: 10px; /* Öğeler arasına boşluk eklenir */
     background-color: var(--zemin-2); /* Panelin arka plan rengi, diğer panellerle tutarlı */
+    animation: panel-acilis 160ms var(--gecis-yumusak) backwards; /* Menü paneliyle aynı giriş hissi */
 }
 #sertifika-baslik {
     display: flex; /* Uyarı simgesi ile başlık metninin yan yana durması için */
@@ -708,6 +834,8 @@ body.sertifika-sayfasi {
 }
 .yerimi-klasor.acik .yerimi-klasor-menu {
     display: block; /* Klasör açık işaretlendiğinde menü gösterilir */
+    animation: dropdown-acilis 120ms var(--gecis-yumusak) backwards; /* Klasör menüsü de diğer açılır panellerle aynı yumuşak belirmeyi kullanır */
+    transform-origin: top left;
 }
 .yerimi-klasor-menu .yerimi-ogesi {
     width: 100%; /* Menü içindeki her öğe, menünün tam genişliğini kullanır */
@@ -724,6 +852,14 @@ body.sertifika-sayfasi {
 body.oneri-sayfasi {
     background-color: var(--zemin-2); /* Panelin arka plan rengi, diğer panellerle tutarlı */
     overflow-y: auto; /* Öneri sayısı panelin yüksekliğini aşarsa, kendi içinde kaydırılır */
+    animation: dropdown-acilis 110ms ease backwards; /* Adres çubuğu yazıldıkça sık sık yeniden açıldığı için, panel giriş animasyonundan daha kısa ve sade bir belirme kullanılır */
+}
+@keyframes dropdown-acilis {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.oneri-satiri, .doldurma-oneri-satiri {
+    animation: dropdown-acilis 110ms ease backwards;
 }
 .oneri-satiri {
     padding: 6px 12px; /* Satırın iç boşluğu */
@@ -737,6 +873,11 @@ body.oneri-sayfasi {
 .oneri-satiri:hover {
     background-color: var(--zemin-3); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
 }
+.oneri-satiri.secili { /* Yukarı/aşağı ok tuşlarıyla o an klavyeden seçili olan satır, fare üzerindeymiş gibi vurgulanır */
+    background-color: var(--zemin-3);
+    outline: 1px solid var(--vurgu, var(--metin-soluk)); /* Tema değişkeninde vurgu rengi yoksa soluk metin rengine düşülür */
+    outline-offset: -1px;
+}
 .oneri-baslik {
     font-size: 13px; /* Başlığın yazı boyutu */
     color: var(--metin); /* Başlığın rengi */
@@ -747,11 +888,17 @@ body.oneri-sayfasi {
     color: var(--metin-soluk); /* İkincil bilgi olduğu için soluk renkte gösterilir */
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; /* Taşan adres metni kırpılır */
 }
+.oneri-eslesme { /* Önerilerde, kullanıcının o an yazdığı sorguyla eşleşen kısım */
+    background: none; /* <mark>'ın varsayılan sarı arka planı yerine, sadece renk/kalınlıkla vurgulanır */
+    color: inherit;
+    font-weight: 700;
+}
 
 /* --- Otomatik doldurma paneli --- */
 body.doldurma-sayfasi {
     background-color: var(--zemin-2); /* Panelin arka plan rengi, diğer panellerle tutarlı */
     overflow-y: auto; /* Öneri sayısı panelin yüksekliğini aşarsa, kendi içinde kaydırılır */
+    animation: dropdown-acilis 110ms ease backwards; /* Öneri panelindeki kısa, sade belirme ile tutarlı */
 }
 .doldurma-oneri-satiri {
     padding: 9px 12px; /* Satırın iç boşluğu */
@@ -781,6 +928,7 @@ body.doldurma-sayfasi {
 }
 #sekme-onizleme-balonu.gorunur {
     display: block; /* Native taraftan görüntü geldiğinde bu sınıf eklenip balon gösterilir */
+    animation: dropdown-acilis 110ms ease backwards; /* Balon da diğer açılır panellerle tutarlı, hafif bir belirmeyle görünür */
 }
 #sekme-onizleme-balonu img {
     display: block; /* Görüntünün altında boşluk bırakan satır içi varsayılan görüntülemesi kaldırılır */
@@ -807,6 +955,8 @@ body.enerji-tasarrufu *, body.enerji-tasarrufu *::before, body.enerji-tasarrufu 
 }
 #sekme-grup-menusu.gorunur {
     display: block;
+    animation: dropdown-acilis 120ms var(--gecis-yumusak) backwards; /* Sağ tık menüsü de aynı yumuşak belirmeyi kullanır */
+    transform-origin: top left;
 }
 .sekme-grup-menu-satiri {
     padding: 8px 10px;
@@ -814,7 +964,9 @@ body.enerji-tasarrufu *, body.enerji-tasarrufu *::before, body.enerji-tasarrufu 
     border-radius: calc(var(--radius) * 0.5);
     cursor: pointer;
     white-space: nowrap;
+    transition: background-color 100ms ease, transform 100ms ease; /* Hover geçişi diğer menülerle tutarlı yumuşaklıkta */
 }
 .sekme-grup-menu-satiri:hover {
     background-color: var(--zemin-3);
+    transform: translateX(2px); /* Diğer menü öğeleriyle tutarlı, hafif bir kayma hissi */
 }

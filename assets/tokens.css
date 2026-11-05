@@ -4,11 +4,11 @@
 
 :root {
     /* Varsayılan, taban tema: koyu. Bu tarayıcı koyu temayla doğdu, açık tema üstüne bilinçli bir alternatif olarak eklendi. */
-    --zemin-0: #0d0e12; /* En koyu zemin, ana pencere arka planı */
-    --zemin-1: #15161c; /* Toolbar ve kart yüzeyleri */
-    --zemin-2: #1c1d24; /* Pasif sekmeler, girdi kutuları */
-    --zemin-3: #262832; /* Aktif/hover yüzeyler */
-    --zemin-4: #34363f; /* Kenarlıklar, ayırıcılar */
+    --zemin-0: #1a1a1c; /* En koyu zemin, ana pencere arka planı */
+    --zemin-1: #202023; /* Toolbar ve kart yüzeyleri */
+    --zemin-2: #2b2b2f; /* Pasif sekmeler, girdi kutuları */
+    --zemin-3: #38383d; /* Aktif/hover yüzeyler */
+    --zemin-4: #46464c; /* Kenarlıklar, ayırıcılar */
     --metin: #e8e9ed; /* Ana yazı rengi */
     --metin-soluk: #8b8d98; /* İkincil, soluk yazı rengi */
 
@@ -89,4 +89,18 @@ html, body {
 
 button {
     font-family: inherit; /* Butonlar, tarayıcının varsayılanı yerine sayfanın genel yazı tipini kullanır */
+}
+
+/* Bu dosyadan sonra gelen tüm CSS dosyalarının paylaştığı, giriş/çıkış animasyonlarında kullanılan tek bir yumuşatma eğrisi, tutarlı bir "his" versin diye tek yerden tanımlanır */
+:root {
+    --gecis-yumusak: cubic-bezier(0.16, 1, 0.3, 1); /* Hızlı başlayıp yavaşça yerine oturan, panel/kart belirmeleri için kullanılan eğri */
+}
+
+/* Kullanıcının işletim sistemi düzeyinde "hareketi azalt" tercihi varsa, tüm animasyon ve geçişler neredeyse anlık hale getirilir, enerji tasarrufu modundaki kuralla aynı mantık */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+    }
 }

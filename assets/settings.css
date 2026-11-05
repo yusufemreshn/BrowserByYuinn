@@ -10,6 +10,18 @@
     height: 100%; /* Kapsayıcı, tüm sayfa yüksekliğini kaplar */
 }
 
+/* Sayfa ilk açıldığında başlık ve içerik, art arda hafif bir belirme ile yerine oturur, sekme değiştirirken kullanılan panel-belir'den ayrı tutulur çünkü bu sadece bir defa, sayfa yüklenirken oynar */
+#ayarlar-hero {
+    animation: ayarlar-govde-belir 220ms var(--gecis-yumusak) backwards;
+}
+#icerik-panel {
+    animation: ayarlar-govde-belir 260ms var(--gecis-yumusak) 40ms backwards;
+}
+@keyframes ayarlar-govde-belir {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* --- Üst başlık: arama kutusu ve kategori sekmeleri --- */
 #ayarlar-hero {
     flex-shrink: 0; /* Pencere daraldığında başlığın küçülmesi engellenir */
@@ -97,7 +109,7 @@
     white-space: nowrap; /* Sekme metni asla alt satıra kırılmaz, uzun isimler ("Gizlilik ve Güvenlik" gibi) tek satırda kalır */
     flex-shrink: 0; /* Tek satıra sıkıştırıldığında sekmenin daralıp metni ezmesi engellenir, bunun yerine grup yatayda kayar */
     cursor: pointer; /* Fare sekmenin üzerine geldiğinde el işaretçisi gösterilir */
-    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease; /* Durum değişiklikleri yumuşak geçişle olur */
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, transform 100ms ease; /* Durum değişiklikleri yumuşak geçişle olur */
 }
 .kategori:hover {
     background-color: var(--zemin-2); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
@@ -107,6 +119,15 @@
     background-color: color-mix(in srgb, var(--vurgu-rengi) 16%, var(--zemin-1)); /* Aktif sekme, vurgu renginin hafifçe karıştığı bir tonla doldurulur */
     border-color: color-mix(in srgb, var(--vurgu-rengi) 50%, transparent); /* Aktif sekmenin kenarlığı vurgu rengine yaklaşır */
     color: var(--metin); /* Aktif sekmenin yazısı tam belirgin bir renge döner */
+    animation: kategori-sec 220ms var(--gecis-yumusak); /* Kategori seçilince hafif bir "zıplama" ile dikkat çeker */
+}
+@keyframes kategori-sec {
+    0% { transform: scale(0.94); }
+    60% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+.kategori:active {
+    transform: scale(0.96); /* Tıklama anında diğer tıklanabilir öğelerle tutarlı bir küçülme hissi */
 }
 
 /* --- Orta içerik alanı --- */
@@ -126,12 +147,26 @@
 
 .panel.aktif {
     display: flex; /* Aktif panel, esnek kutu düzeniyle görünür yapılır */
-    animation: panel-belir 140ms ease; /* Panel değişiminde hafif bir belirme animasyonu olur */
+    animation: panel-belir 180ms var(--gecis-yumusak); /* Panel değişiminde hafif bir belirme animasyonu olur */
 }
 @keyframes panel-belir {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(6px) scale(0.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Panel içindeki kartlar, panel belirirken sırayla kısa aralıklarla içeri süzülür */
+.panel.aktif > .ayarlar-karti, .panel.aktif > .liste-karti {
+    animation: karti-belir 220ms var(--gecis-yumusak) backwards;
+}
+@keyframes karti-belir {
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 }
+.panel.aktif > *:nth-child(1) { animation-delay: 0ms; }
+.panel.aktif > *:nth-child(2) { animation-delay: 35ms; }
+.panel.aktif > *:nth-child(3) { animation-delay: 70ms; }
+.panel.aktif > *:nth-child(4) { animation-delay: 105ms; }
+.panel.aktif > *:nth-child(n+5) { animation-delay: 140ms; }
 
 /* --- Ayar kartı ve satırları --- */
 .ayarlar-karti {
@@ -186,7 +221,11 @@
     margin-bottom: 20px; /* Açıklamanın altına, listeden önce bir boşluk eklenir */
 }
 
-#secim-arama-motoru, #girdi-ana-sayfa, #girdi-site, #girdi-kullanici, #girdi-sifre {
+/* Bu kural, sadece belirli ID'leri tek tek sayan eski haliyle birçok alanı (profil adı, dil seçimi, bellek/kilitlenme süresi seçimi gibi) atlıyordu, bu yüzden o alanlar tarayıcının çirkin/demode varsayılan görünümünde kalıyordu. Artık Ayarlar sayfasındaki HER metin/parola girdisi ve seçim kutusu, tek tipte modern bir görünümü otomatik olarak paylaşır. */
+#icerik-panel input[type="text"]:not(.girdi-kisayol),
+#icerik-panel input[type="password"],
+#icerik-panel input[type="search"],
+#icerik-panel select {
     height: 36px; /* Giriş kutularının ve seçim kutusunun yüksekliği */
     padding: 0 14px; /* İç boşluk */
     border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
@@ -194,14 +233,45 @@
     background-color: var(--zemin-2); /* Arka plan rengi */
     color: var(--metin); /* Yazılan metnin rengi */
     font-size: inherit; /* Genel yazı boyutunu miras alır */
+    font-family: inherit; /* Seçim kutuları bazı tarayıcılarda sistem yazı tipine döner, bu satır genel yazı tipini zorlar */
     outline: none; /* Odaklanıldığında tarayıcının eklediği varsayılan dış çizgi kaldırılır */
-    transition: border-color 140ms ease, box-shadow 140ms ease; /* Odaklanma geçişi yumuşak olur */
+    transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease; /* Odaklanma geçişi yumuşak olur */
 }
-#secim-arama-motoru:focus, #girdi-ana-sayfa:focus, #girdi-site:focus, #girdi-kullanici:focus, #girdi-sifre:focus {
+#icerik-panel input[type="text"]::placeholder, #icerik-panel input[type="password"]::placeholder, #icerik-panel input[type="search"]::placeholder {
+    color: var(--metin-soluk); /* Örnek metin, soluk bir renkte gösterilir */
+}
+#icerik-panel input[type="text"]:hover, #icerik-panel input[type="password"]:hover, #icerik-panel input[type="search"]:hover, #icerik-panel select:hover {
+    border-color: color-mix(in srgb, var(--vurgu-rengi) 30%, var(--zemin-4)); /* Fare üzerine geldiğinde kenarlık, odaklanmadan önce de hafifçe vurgu rengine yaklaşır */
+}
+#icerik-panel input[type="text"]:focus, #icerik-panel input[type="password"]:focus, #icerik-panel input[type="search"]:focus, #icerik-panel select:focus {
     border-color: color-mix(in srgb, var(--vurgu-rengi) 55%, transparent); /* Odaklanıldığında kenarlık, vurgu rengine döner */
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--vurgu-rengi) 18%, transparent); /* Kenarlığın etrafında hafif bir vurgu halesi belirir */
 }
-#secim-arama-motoru { min-width: 160px; cursor: pointer; } /* Seçim kutusu, en az bu genişlikte tutulur ve tıklanabilir olduğunu belli eder */
+
+/* Seçim kutularının işletim sisteminden gelen köşeli, demode ok işareti kaldırılır, yerine tema rengine uyan ince bir "chevron" ikonu konur */
+#icerik-panel select {
+    appearance: none; /* Tarayıcının/işletim sisteminin kendi seçim kutusu görünümü (3 boyutlu kenarlık, kare ok) tamamen kapatılır */
+    -webkit-appearance: none;
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir, tıklanabilir olduğunu belli eder */
+    padding-right: 34px; /* Sağ tarafta, altına konan ok ikonuyla metnin çakışmaması için boşluk bırakılır */
+    min-width: 160px; /* Seçim kutusu, en az bu genişlikte tutulur */
+    background-repeat: no-repeat; /* Ok ikonu tekrar etmeden tek kopya gösterilir */
+    background-position: right 12px center; /* Ok ikonu, kutunun sağına, dikeyde ortalanmış şekilde yerleşir */
+    background-size: 10px 6px; /* Ok ikonunun boyutu */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b8d98' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); /* Koyu/otomatik temada kullanılan soluk gri chevron */
+}
+:root[data-tema="acik"] #icerik-panel select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b6d7a' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); /* Açık temada, chevron da açık temanın soluk metin tonuyla eşleşir */
+}
+:root[data-tema="yuksekkontrast"] #icerik-panel select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23ffffff' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); /* Yüksek kontrast temada chevron, siyah zemin üzerinde net görünsün diye saf beyaz çizilir */
+}
+#icerik-panel select option {
+    background-color: var(--zemin-2); /* Açılır liste öğeleri, kutuyla aynı zemin tonunu kullanır (işletim sistemine bağlı olarak sınırlı stillenebilir) */
+    color: var(--metin);
+}
+
+#secim-arama-motoru { min-width: 200px; } /* Arama motoru seçimi, en uzun seçenek ("DuckDuckGo") için biraz daha geniş tutulur */
 #girdi-ana-sayfa { width: 260px; flex-shrink: 0; } /* Ana sayfa adresi girdisi, seçim kutusuyla aynı mantıkla sabit bir genişlikte tutulur, "width:100%" satırı daraltıp etiketin alt alta kırılmasına sebep oluyordu */
 
 #icerik-panel button:not(.kategori):not(.segment) {
@@ -235,6 +305,18 @@
 }
 
 /* --- Şifre ekleme formu --- */
+/* Profil ekleme, hariç tutulan site ekleme ve mağaza uzantısı yükleme formları da, şifre/kart formlarıyla aynı yan yana düzeni kullanır; bu kural eklenmeden önce girdi kutusu tarayıcının küçük, varsayılan genişlikteki demode kutusunda kalıyordu */
+#profil-ekle-form, #haric-tutma-form, #magaza-uzanti-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+#profil-ekle-form input, #haric-tutma-form input, #magaza-uzanti-form input {
+    flex: 1;
+    min-width: 160px;
+}
+
 #sifre-ekle-form {
     display: flex; /* Form alanları yan yana dizilir */
     flex-wrap: wrap; /* Dar ekranlarda alanlar alt satıra geçebilir */
@@ -302,6 +384,9 @@
 .renk-karesi:hover {
     transform: scale(1.1); /* Fare üzerine geldiğinde renk noktası hafifçe büyür */
 }
+.renk-karesi:active {
+    transform: scale(0.94); /* Tıklama anında diğer tıklanabilir öğelerle tutarlı bir küçülme hissi */
+}
 .renk-karesi.secili {
     border-color: var(--metin); /* Şu anda seçili olan renk karesi, ana metin renginde bir kenarlıkla vurgulanır */
 }
@@ -333,7 +418,7 @@
     color: var(--metin-soluk); /* Normal durumdaki yazı rengi */
     font-size: inherit; /* Genel yazı boyutunu miras alır */
     cursor: pointer; /* Fare butonun üzerine geldiğinde el işaretçisi gösterilir */
-    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease; /* Durum değişiklikleri yumuşak geçişle olur */
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, transform 100ms ease; /* Durum değişiklikleri yumuşak geçişle olur */
 }
 .segment:hover {
     background-color: var(--zemin-3); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
@@ -342,6 +427,10 @@
     background-color: color-mix(in srgb, var(--vurgu-rengi) 16%, var(--zemin-2)); /* Seçili segment, vurgu renginin hafifçe karıştığı bir tonla doldurulur */
     color: var(--metin); /* Seçili segmentin yazısı belirginleşir */
     border-color: color-mix(in srgb, var(--vurgu-rengi) 45%, transparent); /* Seçili segmentin kenarlığı vurgu rengine yaklaşır */
+    animation: kategori-sec 220ms var(--gecis-yumusak); /* Kategori sekmeleriyle aynı hafif "zıplama" hissi */
+}
+.segment:active {
+    transform: scale(0.95); /* Tıklama anında diğer tıklanabilir öğelerle tutarlı bir küçülme hissi */
 }
 
 /* --- Gizlilik paneli: veri kategorisi onay kutuları --- */
@@ -393,13 +482,44 @@
     width: 18px; height: 18px;
     border-radius: 50%; /* Tam yuvarlak bir nokta */
     background-color: #ffffff; /* Nokta, her zeminde de belirgin olsun diye beyaz tutulur */
-    transition: transform 150ms ease; /* Kayma hareketi yumuşak olur */
+    transition: transform 220ms var(--gecis-yumusak); /* Kayma hareketi, hafif bir sekme hissiyle yerine oturur */
 }
 .anahtar input[type="checkbox"]:checked + .anahtar-kaydirici {
     background-color: var(--vurgu-rengi); /* İşaretliyken, anahtarın zemini kullanıcının vurgu rengine döner */
 }
 .anahtar input[type="checkbox"]:checked + .anahtar-kaydirici::before {
     transform: translateX(16px); /* İşaretliyken, nokta anahtarın sağına kayar */
+}
+
+/* --- Yeni sekme arka planı galerisi --- */
+#arkaplan-galeri {
+    display: grid; /* Küçük fotoğraf kareleri, satır/sütunlara otomatik yerleşsin diye ızgara düzeni kullanılır */
+    grid-template-columns: repeat(auto-fill, 72px); /* Her kare sabit genişlikte tutulur, pencere genişliğine göre sütun sayısı kendiliğinden ayarlanır */
+    gap: 8px; /* Kareler arasına boşluk eklenir */
+}
+.arkaplan-secenegi {
+    position: relative; /* İçindeki seçili işaretinin buna göre konumlanması için */
+    width: 72px; height: 48px; /* Her fotoğraf karesinin boyutu */
+    border-radius: calc(var(--radius) * 0.6); /* Köşeler, panelin köşe yuvarlaklığıyla uyumlu, biraz daha dar bir oranda yuvarlanır */
+    overflow: hidden; /* Fotoğrafın taşan kısımları, karenin köşelerini bozmadan kırpılır */
+    border: 2px solid transparent; /* Normalde görünmeyen bir kenarlık, seçili olanı vurgulamak için kullanılır */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir */
+    background-color: var(--zemin-2); /* Fotoğraf henüz yüklenirken görünecek zemin rengi */
+    transition: transform 120ms ease, border-color 120ms ease; /* Hover ve seçim durumları yumuşak geçişle olur */
+}
+.arkaplan-secenegi img {
+    width: 100%; height: 100%; /* Fotoğraf, karenin tamamını kaplar */
+    object-fit: cover; /* Fotoğraf, oranı bozulmadan karenin içine kırpılarak sığdırılır */
+    display: block; /* Görüntünün altında boşluk bırakan satır içi varsayılan görüntülemesi kaldırılır */
+}
+.arkaplan-secenegi:hover {
+    transform: translateY(-2px); /* Fare üzerine geldiğinde kare hafifçe yukarı kalkar */
+}
+.arkaplan-secenegi:active {
+    transform: translateY(-2px) scale(0.95); /* Tıklama anında diğer tıklanabilir öğelerle tutarlı bir küçülme hissi */
+}
+.arkaplan-secenegi.secili {
+    border-color: var(--vurgu-rengi); /* Şu anda kullanılan fotoğraf, vurgu renginde bir kenarlıkla belirgin şekilde işaretlenir */
 }
 
 /* --- Hazır temalar --- */
@@ -422,6 +542,9 @@
 .preset-karti:hover {
     background-color: var(--zemin-3); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
     transform: translateY(-1px); /* Kart hafifçe yukarı kalkar, tıklanabilir hissi güçlenir */
+}
+.preset-karti:active {
+    transform: translateY(-1px) scale(0.97); /* Tıklama anında diğer tıklanabilir kartlarla tutarlı bir küçülme hissi */
 }
 .preset-karti .preset-nokta {
     width: 16px; height: 16px; /* Rengi temsil eden küçük dairenin boyutu */
@@ -457,7 +580,18 @@
     padding: 12px 18px; /* Satırın iç boşluğu */
     border-bottom: 1px solid var(--zemin-2); /* Satırları birbirinden ayıran ince bir çizgi */
     transition: background-color 100ms ease; /* Hover durumu yumuşak geçişle olur */
+    animation: satir-belir 200ms var(--gecis-yumusak) backwards; /* Liste ilk oluşturulduğunda/filtrelendiğinde satırlar hafifçe içeri süzülür */
 }
+@keyframes satir-belir {
+    from { opacity: 0; transform: translateX(-4px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.liste-satiri:nth-of-type(1) { animation-delay: 0ms; }
+.liste-satiri:nth-of-type(2) { animation-delay: 20ms; }
+.liste-satiri:nth-of-type(3) { animation-delay: 40ms; }
+.liste-satiri:nth-of-type(4) { animation-delay: 60ms; }
+.liste-satiri:nth-of-type(5) { animation-delay: 80ms; }
+.liste-satiri:nth-of-type(n+6) { animation-delay: 100ms; }
 .liste-satiri:last-child {
     border-bottom: none; /* Kartın son satırında alt çizgiye gerek yoktur */
 }

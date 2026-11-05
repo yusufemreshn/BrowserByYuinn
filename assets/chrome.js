@@ -76,18 +76,16 @@ butonHamburger.addEventListener("click", function (olay) {
 });
 
 // Windows'un kendi başlık çubuğu kaldırıldığı için, sekme şeridinin boş (bir sekmeye veya butona denk gelmeyen) kısmına basılı tutup sürüklemek, pencereyi taşımalıdır
+// Not: WM_NCLBUTTONDOWN ile başlatılan native sürükleme fareyi hemen Windows'a kaptırdığı için, tarayıcı ikinci tıklamayı asla "dblclick" olarak göremez
+// Bu yüzden çift tıklama, native dblclick olayı yerine burada mousedown'ın olay.detail (tıklama sayısı) bilgisine bakılarak yakalanır
 sekmeSeridi.addEventListener("mousedown", function (olay) {
     const bosAlanaTiklandiMi = (olay.target === sekmeSeridi || olay.target === sekmelerKapsayici); // Tıklanan yerin gerçekten boş arka plan olup olmadığı, bir sekmeye veya butona denk gelmediği kontrol edilir
     if (bosAlanaTiklandiMi && olay.button === 0) { // Eğer boş alana sol tuşla basıldıysa
-        window.chrome.webview.postMessage("windragstart"); // Native tarafa, pencere sürüklemesini başlatma komutu gönderilir
-    }
-});
-
-// Boş alana çift tıklamak, tıpkı gerçek bir başlık çubuğunda olduğu gibi, pencereyi büyütür veya eski haline döndürür
-sekmeSeridi.addEventListener("dblclick", function (olay) {
-    const bosAlanaTiklandiMi = (olay.target === sekmeSeridi || olay.target === sekmelerKapsayici); // Tıklanan yerin boş arka plan olup olmadığı kontrol edilir
-    if (bosAlanaTiklandiMi) { // Eğer boş alana çift tıklandıysa
-        window.chrome.webview.postMessage("winmaximize"); // Native tarafa, büyütme/eski haline döndürme komutu gönderilir
+        if (olay.detail >= 2) { // Bu, kısa süre içindeki ikinci (veya daha fazla) tıklamaysa, yani bir çift tıklamaysa
+            window.chrome.webview.postMessage("winmaximize"); // Native tarafa, büyütme/eski haline döndürme komutu gönderilir, sürükleme başlatılmaz
+        } else {
+            window.chrome.webview.postMessage("windragstart"); // Tek tıklamaysa, native tarafa pencere sürüklemesini başlatma komutu gönderilir
+        }
     }
 });
 
@@ -199,24 +197,34 @@ adresCubugu.addEventListener("input", function () { // Adres çubuğuna her yaz�
         return;
     }
     const kabRect = document.getElementById("adres-cubugu-kabi").getBoundingClientRect(); // Önerilerin, adres çubuğunun tam altında ve aynı genişlikte belirmesi için kabın ekrandaki konumu okunur
-    window.chrome.webview.postMessage("get_addresssuggestions|" + JSON.stringify({ query: sorgu, left: kabRect.left, top: kabRect.bottom, width: kabRect.width }));
+    // left/top/width burada bilerek metne çevrilip (String(...)) öyle gönderiliyor: JsonAlaniBul (native tarafta) sadece tırnaklı metin değerlerini okuyabiliyor, çıplak sayı gönderilirse hep boş okunup konum (0,0) sanılıyordu
+    window.chrome.webview.postMessage("get_addresssuggestions|" + JSON.stringify({ query: sorgu, left: String(kabRect.left), top: String(kabRect.bottom), width: String(kabRect.width) }));
 });
+
+let enterBeklemedekiMetin = ""; // Enter'a basıldığında, native taraf klavyeyle seçili bir öneri olup olmadığını bildirene kadar yazılan metin burada saklanır
 
 adresCubugu.addEventListener("keydown", function (olay) {
     if (olay.key === "Escape") { // Kullanıcı Escape'e basarsa, öneriler kapatılır
         window.chrome.webview.postMessage("close_addresssuggestions");
         return;
     }
+    if (olay.key === "ArrowDown" || olay.key === "ArrowUp") { // Öneri paneli açıkken ok tuşları, imleci metin içinde taşımak yerine öneriler arasında gezinsin diye kullanılır
+        olay.preventDefault(); // Adres çubuğunun imleci metin başına/sonuna taşıyan varsayılan davranışı engellenir
+        window.chrome.webview.postMessage("addresssuggestion_navigate|" + (olay.key === "ArrowDown" ? "down" : "up"));
+        return;
+    }
     if (olay.key === "Enter") { // Kullanıcı adres çubuğundayken Enter tuşuna bastıysa
-        window.chrome.webview.postMessage("close_addresssuggestions"); // Enter ile gezinildiğinde, açık öneri listesi varsa kapatılır
         if (!adresCubuguHesapSonucu.classList.contains("gizli")) { // Eğer o an geçerli bir matematik sonucu gösteriliyorsa
             adresCubugu.value = adresCubuguHesapSonucu.textContent.replace(/^=\s*/, ""); // Adres çubuğunun içeriği, sonucun kendisiyle değiştirilir
             adresCubuguHesapSonucu.classList.add("gizli"); // Sonuç etiketi, artık adres çubuğunun içeriğiyle aynı şeyi tekrarlamasın diye gizlenir
             adresCubugu.select(); // Sonuç, kullanıcı hemen üzerine yeni bir hesap yazabilsin diye seçili bırakılır
+            window.chrome.webview.postMessage("close_addresssuggestions");
             return; // Bu basışta hiçbir yere gezinilmez, sadece sonuç adrese yazılır
         }
-        const yazilanMetin = adresCubugu.value; // Adres çubuğuna yazılmış olan metin okunur
-        window.chrome.webview.postMessage("navigate|" + yazilanMetin); // Native tarafa, "navigate|" önekiyle birlikte yazılan metin gönderilir
+        // Öneri panelinde klavyeyle seçili bir satır olabileceğinden, önce native tarafa sorulur; native taraf seçili bir satır bulursa doğrudan oraya gider ve paneli kapatır,
+        // bulamazsa "addresssuggestion_notconfirmed" ile geri bildirir, o zaman burada saklanan metin normal adres gezinmesi olarak gönderilir
+        enterBeklemedekiMetin = adresCubugu.value;
+        window.chrome.webview.postMessage("addresssuggestion_confirm");
     }
 });
 
@@ -261,8 +269,6 @@ function sekmeOgesiniDoldur(sekmeOgesi, sekme, aktifId, aramaMetni) {
         sekmeOgesi.appendChild(sesOgesi);
         sekmeOgesi.appendChild(kapatOgesi);
 
-        sekmeOgesi.draggable = true; // Sekmenin fare ile sürüklenip bırakılarak yeniden sıralanabilmesi için
-
         sekmeOgesi.addEventListener("click", function () {
             window.chrome.webview.postMessage("switchtab|" + sekmeOgesi.dataset.sekmeId); // Sekmenin herhangi bir yerine tıklanınca, native tarafa o sekmeye geçiş komutu gönderilir
         });
@@ -279,15 +285,19 @@ function sekmeOgesiniDoldur(sekmeOgesi, sekme, aktifId, aramaMetni) {
             window.chrome.webview.postMessage("mutetab|" + sekmeOgesi.dataset.sekmeId); // Native tarafa, bu sekmenin sessize alınma durumunu tersine çevirme komutu gönderilir
         });
 
+        sekmeOgesi.draggable = true; // Sekmenin fare ile sürüklenip bırakılarak yeniden sıralanabilmesi için
+
         // Sürükle-bırak ile yeniden sıralama: sekme sürüklenmeye başlayınca kimliği hatırlanır, başka bir sekmenin üzerine gelindiğinde DOM'da anında yer değiştirilir, bırakılınca native tarafa son sıra bildirilir
         sekmeOgesi.addEventListener("dragstart", function (olay) {
             olay.dataTransfer.effectAllowed = "move";
             olay.dataTransfer.setData("text/plain", sekmeOgesi.dataset.sekmeId); // Firefox gibi bazı tarayıcılarda dataTransfer'e veri atanmazsa sürükleme hiç başlamaz, bu yüzden boş geçilmez
             suruklenenSekmeId = sekmeOgesi.dataset.sekmeId;
+            sekmelerKapsayici.classList.add("surukleme-aktif"); // Sürükleme boyunca .sekme geçişleri kapatılır, aksi halde her insertBefore sonrası width geçişi yeniden tetiklenip titreme hissi verir
             setTimeout(function () { sekmeOgesi.classList.add("surukleniyor"); }, 0); // Bir an geciktirilir, aksi halde tarayıcının kendi sürükleme "hayalet görüntüsü" de saydam çekilir
         });
         sekmeOgesi.addEventListener("dragend", function () {
             sekmeOgesi.classList.remove("surukleniyor");
+            sekmelerKapsayici.classList.remove("surukleme-aktif");
             suruklenenSekmeId = null;
         });
         sekmeOgesi.addEventListener("dragover", function (olay) {
@@ -335,9 +345,13 @@ function sekmeOgesiniDoldur(sekmeOgesi, sekme, aktifId, aramaMetni) {
         });
 
         sekmeOgesi.dataset.kuruldu = "1"; // Bu öğenin iç yapısının artık kurulu olduğu işaretlenir
+        sekmeOgesi.classList.add("sekme-giris"); // Sekme ilk kez oluşturulduğunda giriş animasyonu sınıfı eklenir, bir sonraki çizimde className tamamen yeniden yazılacağı için bu sınıf kendiliğinden düşer, animasyon tekrar tekrar oynamaz
     }
 
     sekmeOgesi.querySelector(".sekme-baslik").textContent = gosterilecekBaslik; // Başlık metni, her çizimde güncellenir
+
+    const faviconOgesi = sekmeOgesi.querySelector(".sekme-favicon"); // Sekmenin site simgesi kutusu
+    faviconOgesi.style.backgroundImage = sekme.favicon ? "url('" + sekme.favicon + "')" : ""; // Native taraf bu sekme için bir favicon bulduysa onu gösterir, bulamadıysa CSS'teki varsayılan program logosu kalır
 
     const sesOgesi = sekmeOgesi.querySelector(".sekme-ses"); // Ses durumu ikonu, sadece sekme ses çalıyorsa veya sessize alınmışsa görünür
     if (sekme.muted) { sesOgesi.textContent = "🔇"; sesOgesi.classList.add("gorunur"); }
@@ -633,6 +647,10 @@ window.chrome.webview.addEventListener("message", function (olay) {
         adresCubugu.focus(); // Adres çubuğuna odaklanılır
         adresCubugu.select(); // Adres çubuğundaki mevcut metin tamamen seçilir, kullanıcı doğrudan yazmaya başlayabilir
     }
+    else if (veri.type === "addresssuggestion_notconfirmed") { // Enter'a basıldığında native taraf, öneri panelinde klavyeyle seçili bir satır OLMADIĞINI bildiriyorsa, Enter normal adres gezinmesi olarak değerlendirilir
+        window.chrome.webview.postMessage("close_addresssuggestions");
+        window.chrome.webview.postMessage("navigate|" + enterBeklemedekiMetin);
+    }
     else if (veri.type === "focustabsearch") { // Eğer gelen mesaj, sekme arama kutusuna odaklanma isteğiyse (Ctrl+Shift+A kısayolundan gelir)
         if (sekmeAramaGirdi.classList.contains("gizli")) { // Eğer arama kutusu şu anda kapalıysa
             sekmeAramaKutusunuAcKapat(); // Önce açılır
@@ -684,6 +702,9 @@ function temayiUygula(tema) {
 
 window.chrome.webview.postMessage("get_theme"); // Sayfa yüklenir yüklenmez, native taraftan kayıtlı tema ayarları istenir, böylece program her açıldığında kullanıcının seçtiği tema uygulanır
 window.chrome.webview.postMessage("get_bookmarkbar"); // Sayfa yüklenir yüklenmez, native taraftan kayıtlı yer imleri de istenir, böylece çubuk programın her açılışında doğru doldurulur
+// Program ilk açıldığında native taraf, toolbar sayfası henüz yüklenmeden ilk sekmeyi oluşturup sekme listesini göndermeye çalışıyordu, bu mesaj kayboluyor ve ilk sekme hiç çizilmiyordu (sadece "+" butonu görünüyordu), ikinci sekme açılınca her ikisi de doğru çiziliyordu
+// Bu yüzden toolbar sayfası kendisi yüklendiğinde, güncel sekme listesini native taraftan AYRICA isteyerek bu kaybı telafi eder
+window.chrome.webview.postMessage("get_tabs");
 
 window.addEventListener("resize", function () { // Pencere boyutu değiştiğinde
     sekmeGenislikleriniAyarla(sonBilinenSekmeler); // Kullanılabilir alan değiştiği için, sekme genişlikleri yeniden hesaplanır

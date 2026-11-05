@@ -9,37 +9,105 @@
     <link rel="stylesheet" href="chrome.css" /> <!-- .menu-ogesi, .menu-ayrac gibi ortak menü stilleri buradan alınır -->
 </head>
 <body class="menu-sayfasi">
-    <div id="menu-ram-gostergesi">RAM: <span id="menu-ram-deger">—</span></div> <!-- Güncel toplam RAM kullanımını gösteren üst satır -->
-    <button class="menu-ogesi" data-komut="newtab">Yeni Sekme<span class="menu-kisayol">Ctrl+T</span></button>
-    <button class="menu-ogesi" data-komut="newprivatetab">Yeni Gizli Sekme<span class="menu-kisayol">Ctrl+Shift+N</span></button>
-    <button class="menu-ogesi" data-komut="duplicateactivetab">Sekmeyi Çoğalt<span class="menu-kisayol">Ctrl+D</span></button>
-    <button class="menu-ogesi" data-komut="addtoreadinglist">Sayfayı Okuma Listesine Ekle</button>
-    <button class="menu-ogesi" data-komut="reopenclosedtab">Son Kapatılan Sekmeyi Aç<span class="menu-kisayol">Ctrl+Shift+T</span></button>
-    <div class="menu-ayrac"></div>
-    <button class="menu-ogesi" data-komut="opensettings|gecmis">Geçmiş</button>
-    <button class="menu-ogesi" data-komut="opensettings|yerimleri">Yer İmleri</button>
-    <button class="menu-ogesi" data-komut="opensettings|okumalistesi">Okuma Listesi</button>
-    <button class="menu-ogesi" data-komut="opensettings|sifreler">Şifreler</button>
-    <button class="menu-ogesi" data-komut="opensettings|hatagunlugu">Hata Günlüğü</button>
-    <div class="menu-ayrac"></div>
+    <div id="menu-ram-gostergesi"> <!-- Üst RAM göstergesi, artık küçük bir simgeyle birlikte bir "durum çipi" gibi gösteriliyor -->
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg>
+        <span>RAM <span id="menu-ram-deger">—</span></span>
+    </div>
+
+    <div class="menu-bolum-basligi">Sekmeler</div>
+    <button class="menu-ogesi" data-komut="newtab">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="menu-ogesi-metin">Yeni Sekme</span><span class="menu-kisayol">Ctrl+T</span>
+    </button>
+    <button class="menu-ogesi" data-komut="newprivatetab">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="13" r="3"/><circle cx="17" cy="13" r="3"/><path d="M10 13h4M3 13l2-5h14l2 5"/></svg>
+        <span class="menu-ogesi-metin">Yeni Gizli Sekme</span><span class="menu-kisayol">Ctrl+Shift+N</span>
+    </button>
+    <button class="menu-ogesi" data-komut="duplicateactivetab">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></svg>
+        <span class="menu-ogesi-metin">Sekmeyi Çoğalt</span><span class="menu-kisayol">Ctrl+D</span>
+    </button>
+    <button class="menu-ogesi" data-komut="addtoreadinglist">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15l-6-3-6 3V3z"/><path d="M9 9h4M9 12h4"/></svg>
+        <span class="menu-ogesi-metin">Sayfayı Okuma Listesine Ekle</span>
+    </button>
+    <button class="menu-ogesi" data-komut="reopenclosedtab">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        <span class="menu-ogesi-metin">Son Kapatılan Sekmeyi Aç</span><span class="menu-kisayol">Ctrl+Shift+T</span>
+    </button>
+
+    <div class="menu-bolum-basligi">Kayıtlar</div>
+    <button class="menu-ogesi" data-komut="opensettings|gecmis">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+        <span class="menu-ogesi-metin">Geçmiş</span>
+    </button>
+    <button class="menu-ogesi" data-komut="opensettings|yerimleri">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.8-4.3 4.1 1 5.8L12 16l-5.2 3 1-5.8-4.3-4.1 5.9-.8z"/></svg>
+        <span class="menu-ogesi-metin">Yer İmleri</span>
+    </button>
+    <button class="menu-ogesi" data-komut="opensettings|okumalistesi">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        <span class="menu-ogesi-metin">Okuma Listesi</span>
+    </button>
+    <button class="menu-ogesi" data-komut="opensettings|sifreler">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/></svg>
+        <span class="menu-ogesi-metin">Şifreler</span>
+    </button>
+    <button class="menu-ogesi" data-komut="opensettings|hatagunlugu">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17.5v.01"/></svg>
+        <span class="menu-ogesi-metin">Hata Günlüğü</span>
+    </button>
+
+    <div class="menu-bolum-basligi">Sayfa</div>
     <div id="menu-yakinlastir-satiri"> <!-- Yakınlaştırma oranını azaltıp artırmayı sağlayan satır -->
-        <span>Yakınlaştır</span>
+        <span class="menu-yakinlastir-etiket">
+            <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            Yakınlaştır
+        </span>
         <div id="menu-yakinlastir-kontrolleri">
             <button id="menu-yakinlastir-azalt" title="Uzaklaştır (Ctrl+-)">&#x2212;</button>
             <span id="menu-yakinlastir-yuzde">100%</span>
             <button id="menu-yakinlastir-arttir" title="Yakınlaştır (Ctrl+=)">&#x2b;</button>
         </div>
     </div>
-    <button class="menu-ogesi" data-komut="findinpage">Sayfada Bul<span class="menu-kisayol">Ctrl+F</span></button>
-    <button class="menu-ogesi" data-komut="print">Yazdır / PDF Kaydet<span class="menu-kisayol">Ctrl+P</span></button>
-    <button class="menu-ogesi" data-komut="readermode">Okuyucu Modu</button>
-    <button class="menu-ogesi" data-komut="translatepage">Sayfayı Çevir</button>
-    <button class="menu-ogesi" data-komut="forcedarkmode">Siteyi Koyu Göster</button>
-    <button class="menu-ogesi" data-komut="readeraloud">Sayfayı Sesli Oku</button>
-    <button class="menu-ogesi" data-komut="openshortcuts">Klavye Kısayolları<span class="menu-kisayol">Ctrl+/</span></button>
+    <button class="menu-ogesi" data-komut="findinpage">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <span class="menu-ogesi-metin">Sayfada Bul</span><span class="menu-kisayol">Ctrl+F</span>
+    </button>
+    <button class="menu-ogesi" data-komut="print">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="7" rx="1"/><path d="M6 16h12v5H6z"/></svg>
+        <span class="menu-ogesi-metin">Yazdır / PDF Kaydet</span><span class="menu-kisayol">Ctrl+P</span>
+    </button>
+    <button class="menu-ogesi" data-komut="readermode">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7v15H4zM13 5h7v15h-7z"/><path d="M6 9h3M6 12h3M15 9h3M15 12h3"/></svg>
+        <span class="menu-ogesi-metin">Okuyucu Modu</span>
+    </button>
+    <button class="menu-ogesi" data-komut="translatepage">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13 13 0 0 1 0 18 13 13 0 0 1 0-18z"/></svg>
+        <span class="menu-ogesi-metin">Sayfayı Çevir</span>
+    </button>
+    <button class="menu-ogesi" data-komut="forcedarkmode">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
+        <span class="menu-ogesi-metin">Siteyi Koyu Göster</span>
+    </button>
+    <button class="menu-ogesi" data-komut="readeraloud">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 9a4 4 0 0 1 0 6"/></svg>
+        <span class="menu-ogesi-metin">Sayfayı Sesli Oku</span>
+    </button>
+    <button class="menu-ogesi" data-komut="openshortcuts">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M17 10h.01M7 14h8"/></svg>
+        <span class="menu-ogesi-metin">Klavye Kısayolları</span><span class="menu-kisayol">Ctrl+/</span>
+    </button>
+
     <div class="menu-ayrac"></div>
-    <button class="menu-ogesi" data-komut="opensettings">Ayarlar</button>
-    <button class="menu-ogesi" data-komut="winclose">Çıkış</button>
+    <button class="menu-ogesi" data-komut="opensettings">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V19a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/></svg>
+        <span class="menu-ogesi-metin">Ayarlar</span>
+    </button>
+    <button class="menu-ogesi menu-ogesi-tehlikeli" data-komut="winclose">
+        <svg class="menu-simge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        <span class="menu-ogesi-metin">Çıkış</span>
+    </button>
     <script src="menu.js"></script>
 </body>
 </html>

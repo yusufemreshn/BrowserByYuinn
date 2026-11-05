@@ -92,7 +92,7 @@ function kategoriyeGec(kategoriAdi) {
     else if (kategoriAdi === "sifreler") { window.chrome.webview.postMessage("get_passwords"); }
     else if (kategoriAdi === "doldurma") { window.chrome.webview.postMessage("get_autofillprofile"); window.chrome.webview.postMessage("get_cards"); }
     else if (kategoriAdi === "indirmeler") { window.chrome.webview.postMessage("get_downloads"); }
-    else if (kategoriAdi === "eklentiler") { window.chrome.webview.postMessage("get_extensions"); window.chrome.webview.postMessage("get_userscripts"); }
+    else if (kategoriAdi === "eklentiler") { window.chrome.webview.postMessage("get_extensions"); }
     else if (kategoriAdi === "hatagunlugu") { window.chrome.webview.postMessage("get_errorlog"); }
     else if (kategoriAdi === "hakkinda") { window.chrome.webview.postMessage("get_about"); }
     else if (kategoriAdi === "gizlilik") { window.chrome.webview.postMessage("get_permissions"); }
@@ -152,23 +152,16 @@ ozelRenkGirdisi.addEventListener("input", function () { // Kullanıcı, native r
     temaKaydet(); // Yeni tema, native tarafa kaydedilir
 });
 
-let seciliYogunluk = "normal"; // Şu anda seçili olan sekme şeridi yoğunluğu
+const seciliYogunluk = "normal"; // Sekme şeridi yoğunluğu, kullanıcıya artık seçenek olarak sunulmuyor, her zaman geniş (normal) sabit kalır
 let seciliYaziBoyutu = "orta"; // Şu anda seçili olan yazı boyutu
 let seciliTemaModu = "otomatik"; // Şu anda seçili olan açık/koyu/otomatik tema modu
-let seciliKose = "orta"; // Şu anda seçili olan köşe yuvarlaklığı
+const seciliKose = "orta"; // Köşe yuvarlaklığı, kullanıcıya artık seçenek olarak sunulmuyor, her zaman orta sabit kalır
 let seciliYerImiCubugu = true; // Şu anda seçili olan yer imi çubuğu görünürlüğü
 
 const anahtarYerImiCubugu = document.getElementById("anahtar-yerimi-cubugu"); // Yer imi çubuğu açık/kapalı anahtarının HTML öğesi
 anahtarYerImiCubugu.addEventListener("change", function () {
     seciliYerImiCubugu = anahtarYerImiCubugu.checked; // Seçili durum, anahtarın yeni durumuna güncellenir
     temaKaydet(); // Yeni tercih, native tarafa kaydedilir
-});
-
-document.querySelectorAll("#yogunluk-secenekleri .segment").forEach(function (buton) { // Yoğunluk seçim butonlarının her birine tıklama dinleyicisi eklenir
-    buton.addEventListener("click", function () {
-        seciliYogunluk = buton.dataset.yogunluk; // Seçilen yoğunluk güncellenir
-        temaKaydet(); // Yeni tema, native tarafa kaydedilir
-    });
 });
 
 document.querySelectorAll("#yazi-boyutu-secenekleri .segment").forEach(function (buton) { // Yazı boyutu seçim butonlarının her birine tıklama dinleyicisi eklenir
@@ -185,17 +178,9 @@ document.querySelectorAll("#tema-modu-secenekleri .segment").forEach(function (b
     });
 });
 
-document.querySelectorAll("#kose-secenekleri .segment").forEach(function (buton) { // Köşe yuvarlaklığı seçim butonlarının her birine tıklama dinleyicisi eklenir
-    buton.addEventListener("click", function () {
-        seciliKose = buton.dataset.kose; // Seçilen köşe yuvarlaklığı güncellenir
-        temaKaydet(); // Yeni tema, native tarafa kaydedilir
-    });
-});
-
 document.querySelectorAll(".preset-karti").forEach(function (kart) { // Her hazır tema kartına tıklama dinleyicisi eklenir
     kart.addEventListener("click", function () {
         seciliVurguRengi = kart.dataset.renk; // Kartın rengi, seçili renk yapılır
-        seciliKose = kart.dataset.radius; // Kartın köşe yuvarlaklığı, seçili köşe yapılır
         seciliTemaModu = kart.dataset.mod; // Kartın tema modu, seçili mod yapılır
         temaKaydet(); // Hazır temanın tüm alanları, tek seferde native tarafa kaydedilir
     });
@@ -217,22 +202,15 @@ function gorunumSecimleriniGuncelle(tema) {
         ozelRenkGirdisi.value = tema.accent; // Özel renk seçicinin kendisi, bu rengi gösterecek şekilde güncellenir
     }
 
-    document.querySelectorAll("#yogunluk-secenekleri .segment").forEach(function (buton) { // Her yoğunluk butonu gezilir
-        buton.classList.toggle("secili", buton.dataset.yogunluk === tema.density); // Sadece güncel yoğunluğa karşılık gelen buton işaretlenir
-    });
     document.querySelectorAll("#yazi-boyutu-secenekleri .segment").forEach(function (buton) { // Her yazı boyutu butonu gezilir
         buton.classList.toggle("secili", buton.dataset.boyut === tema.fontSize); // Sadece güncel yazı boyutuna karşılık gelen buton işaretlenir
     });
     document.querySelectorAll("#tema-modu-secenekleri .segment").forEach(function (buton) { // Her tema modu butonu gezilir
         buton.classList.toggle("secili", buton.dataset.mod === tema.mode); // Sadece güncel tema moduna karşılık gelen buton işaretlenir
     });
-    document.querySelectorAll("#kose-secenekleri .segment").forEach(function (buton) { // Her köşe yuvarlaklığı butonu gezilir
-        buton.classList.toggle("secili", buton.dataset.kose === tema.radius); // Sadece güncel köşe yuvarlaklığına karşılık gelen buton işaretlenir
-    });
-
     anahtarYerImiCubugu.checked = (tema.showBookmarkBar !== false); // Yer imi çubuğu anahtarı, güncel tercihe göre ayarlanır
 
-    seciliVurguRengi = tema.accent; seciliYogunluk = tema.density; seciliYaziBoyutu = tema.fontSize; seciliTemaModu = tema.mode; seciliKose = tema.radius; seciliYerImiCubugu = (tema.showBookmarkBar !== false); // Yerel değişkenler de güncel ayarla eşitlenir, böylece bir sonraki kullanıcı etkileşiminde eski değerlerin üzerine yazılmaz
+    seciliVurguRengi = tema.accent; seciliYaziBoyutu = tema.fontSize; seciliTemaModu = tema.mode; seciliYerImiCubugu = (tema.showBookmarkBar !== false); // Yerel değişkenler de güncel ayarla eşitlenir, böylece bir sonraki kullanıcı etkileşiminde eski değerlerin üzerine yazılmaz; yoğunluk ve köşe yuvarlaklığı artık sabit olduğu için burada güncellenmez
 }
 
 // Gizlilik panelindeki zaman aralığı segmentleri, tek seferde sadece biri seçili olacak şekilde çalışır
@@ -438,7 +416,7 @@ document.getElementById("buton-yeni-profil-olustur").addEventListener("click", f
     const ad = document.getElementById("girdi-yeni-profil-adi").value.trim();
     if (!ad) { return; }
     if (!/^[a-zA-Z0-9_\- ]+$/.test(ad)) { alert("Profil adı sadece harf, rakam, boşluk, tire ve alt çizgi içerebilir."); return; }
-    window.chrome.webview.postMessage("switch_profile|" + ad.replace(/ /g, "_"));
+    window.chrome.webview.postMessage("create_profile|" + ad.replace(/ /g, "_")); // Yeni profil oluşturma, native tarafta Windows şifresi doğrulamasından geçer
 });
 
 // Native taraftan profil listesi geldiğinde ekrana çizen fonksiyon
@@ -458,6 +436,17 @@ function profilListesiniCiz(profiller, aktifProfil) {
         satir.appendChild(anaMetin);
 
         if (gercekAd !== aktifProfil) {
+            if (gercekAd) { // Varsayılan (profilsiz) mod silinemez, sadece gerçek, adlandırılmış profiller silinebilir
+                const silButonu = document.createElement("button");
+                silButonu.className = "buton-ikincil";
+                silButonu.textContent = "Profili Sil";
+                silButonu.addEventListener("click", function () {
+                    // Ek bir onay penceresi gerekmez, native taraf silme işleminden önce zaten Windows şifresi ister, bu geri alınamaz işlem için yeterli bir güvenlik katmanıdır
+                    window.chrome.webview.postMessage("delete_profile|" + gercekAd);
+                });
+                satir.appendChild(silButonu);
+            }
+
             const gecButonu = document.createElement("button");
             gecButonu.textContent = "Bu Profile Geç";
             gecButonu.addEventListener("click", function () {
@@ -492,8 +481,34 @@ document.getElementById("buton-arkaplan-sec").addEventListener("click", function
     window.chrome.webview.postMessage("pick_newtab_background");
 });
 document.getElementById("buton-arkaplan-kaldir").addEventListener("click", function () {
-    window.chrome.webview.postMessage("clear_newtab_background");
+    window.chrome.webview.postMessage("clear_newtab_background"); // Ayar temizlenir, bir sonraki yeni sekmede resimler klasöründen rastgele biri gösterilir
 });
+
+let sonBilinenArkaPlanYolu = ""; // Galerideki hangi karenin "seçili" olarak işaretleneceğini bilmek için, native'den gelen güncel arka plan yolu burada tutulur
+
+// Native taraftan "resimler" klasöründeki fotoğrafların listesi geldiğinde, galeriyi küçük tıklanabilir karelerle çizen fonksiyon
+// Her öğe {name, thumb} biçimindedir: "name" seçim mesajında ve "şu an seçili mi" karşılaştırmasında kullanılan gerçek dosya adı, "thumb" ise native tarafın önceden küçültüp diske yazdığı, karede gösterilecek 128x128 önizleme dosyasının yolu (orijinali tam boyutta göstermek arayüzü kasıyordu)
+function arkaplanGalerisiniCiz(resimler) {
+    const kapsayici = document.getElementById("arkaplan-galeri");
+    kapsayici.innerHTML = "";
+    resimler.forEach(function (resim) {
+        const kare = document.createElement("div");
+        kare.className = "arkaplan-secenegi";
+        kare.title = resim.name;
+        if (sonBilinenArkaPlanYolu && sonBilinenArkaPlanYolu.split("\\").pop() === resim.name) {
+            kare.classList.add("secili"); // Şu anda kullanılan fotoğraf, galeri içinde vurgulanır
+        }
+        const img = document.createElement("img");
+        img.src = "https://tarayici-resimler.local/" + resim.thumb.split("/").map(encodeURIComponent).join("/"); // Küçük önizleme, "resimler" klasörüne eşlenen sahte adresten (".thumbs/..." alt yolu dahil) yüklenir
+        img.loading = "lazy";
+        kare.appendChild(img);
+        kare.addEventListener("click", function () {
+            window.chrome.webview.postMessage("set_newtab_background_frompath|" + resim.name); // Tıklanınca her zaman orijinal (tam kalite) dosya arka plan olarak seçilir, önizleme sadece galeri için vardır
+        });
+        kapsayici.appendChild(kare);
+    });
+}
+window.chrome.webview.postMessage("get_backgroundgallery"); // Sayfa yüklenir yüklenmez, galeri listesi istenir
 
 // Kısayolları özelleştirme formu, native tarafa kaydeder, önce aynı harfin iki eyleme birden atanmadığından emin olunur
 document.getElementById("buton-kisayol-kaydet").addEventListener("click", function () {
@@ -908,61 +923,7 @@ function uzantilarListesiniCiz(liste) {
     aramaFiltresiUygula();
 }
 
-// Betik ekleme formu
-document.getElementById("buton-betik-ekle").addEventListener("click", function () {
-    const ad = document.getElementById("girdi-betik-ad").value;
-    const desen = document.getElementById("girdi-betik-desen").value;
-    const kod = document.getElementById("girdi-betik-kod").value;
-
-    if (!ad || !desen || !kod) {
-        alert("Lütfen betik adı, desen ve kod alanlarının hepsini doldurun.");
-        return;
-    }
-
-    window.chrome.webview.postMessage("add_userscript|" + JSON.stringify({ name: ad, pattern: desen, code: kod }));
-
-    document.getElementById("girdi-betik-ad").value = "";
-    document.getElementById("girdi-betik-desen").value = "";
-    document.getElementById("girdi-betik-kod").value = "";
-});
-
-// Kullanıcı betikleri listesini, native taraftan gelen kayıtlarla ekrana çizen fonksiyon
-function betiklerListesiniCiz(liste) {
-    const kapsayici = document.getElementById("betikler-listesi");
-    kapsayici.innerHTML = "";
-
-    if (liste.length === 0) {
-        kapsayici.innerHTML = "<div class=\"liste-satiri\"><div class=\"ana-metin\">Henüz kayıtlı bir kullanıcı betiği yok.</div></div>";
-        return;
-    }
-
-    liste.forEach(function (kayit) {
-        const satir = document.createElement("div");
-        satir.className = "liste-satiri";
-
-        const anaMetin = document.createElement("div");
-        anaMetin.className = "ana-metin";
-        anaMetin.innerHTML = kayit.ad + "<div class=\"ikincil-metin\">" + kayit.desen + " · " + (kayit.etkinMi ? "Etkin" : "Devre dışı") + "</div>";
-
-        const durumButonu = document.createElement("button");
-        durumButonu.textContent = kayit.etkinMi ? "Devre Dışı Bırak" : "Etkinleştir";
-        durumButonu.addEventListener("click", function () {
-            window.chrome.webview.postMessage("toggle_userscript|" + kayit.id + "|" + (kayit.etkinMi ? "hayir" : "evet"));
-        });
-
-        const silButonu = document.createElement("button");
-        silButonu.textContent = "Sil";
-        silButonu.addEventListener("click", function () {
-            window.chrome.webview.postMessage("remove_userscript|" + kayit.id);
-        });
-
-        satir.appendChild(anaMetin);
-        satir.appendChild(durumButonu);
-        satir.appendChild(silButonu);
-        kapsayici.appendChild(satir);
-    });
-    aramaFiltresiUygula();
-}
+// Kullanıcı betiği ekleme özelliği (form, liste ve ilgili native mesajları) Ayarlar'dan kaldırıldı, az kullanılan ve kafa karıştıran bir seçenekti
 
 // İndirme listesini, native taraftan gelen kayıtlarla ekrana çizen fonksiyon
 function indirmelerListesiniCiz(liste) {
@@ -1036,7 +997,11 @@ window.chrome.webview.addEventListener("message", function (olay) {
         document.getElementById("girdi-ana-sayfa").value = veri.homepage; // Ana sayfa kutusu, kayıtlı değere ayarlanır
         document.getElementById("secim-kilitlenme-suresi").value = String(veri.lockMinutes); // Şifre kasası kilitlenme süresi seçimi, kayıtlı değere ayarlanır
         document.getElementById("secim-uyku-esigi").value = String(veri.sleepThresholdMinutes); // Bellek tasarrufu eşiği seçimi, kayıtlı değere ayarlanır
-        document.getElementById("arkaplan-dosya-adi").textContent = veri.backgroundPath ? ("Seçili dosya: " + veri.backgroundPath.split("\\").pop()) : "Varsayılan desenli arka plan kullanılıyor"; // Tam yoldan sadece dosya adı gösterilir
+        document.getElementById("arkaplan-dosya-adi").textContent = veri.backgroundPath ? ("Seçili dosya: " + veri.backgroundPath.split("\\").pop()) : "Rastgele seçiliyor (resimler klasöründen)"; // Tam yoldan sadece dosya adı gösterilir
+        sonBilinenArkaPlanYolu = veri.backgroundPath || ""; // Galerideki "seçili" işaretini doğru karede gösterebilmek için güncel yol hatırlanır
+        document.querySelectorAll(".arkaplan-secenegi").forEach(function (kare) { // Galeri zaten çizilmişse, seçili işareti anında güncellenir
+            kare.classList.toggle("secili", !!sonBilinenArkaPlanYolu && sonBilinenArkaPlanYolu.split("\\").pop() === kare.title);
+        });
 
         document.getElementById("kisayol-yenisekme").value = veri.shortcuts.newtab;
         document.getElementById("kisayol-sekmekapat").value = veri.shortcuts.closetab;
@@ -1046,7 +1011,6 @@ window.chrome.webview.addEventListener("message", function (olay) {
         document.getElementById("kisayol-yenile").value = veri.shortcuts.reload;
         document.getElementById("kisayol-adres").value = veri.shortcuts.address;
         seciliVurguRengi = veri.theme.accent; // Seçili renk, kayıtlı değere ayarlanır
-        seciliYogunluk = veri.theme.density; // Seçili yoğunluk, kayıtlı değere ayarlanır
         seciliYaziBoyutu = veri.theme.fontSize; // Seçili yazı boyutu, kayıtlı değere ayarlanır
         gorunumSecimleriniGuncelle(veri.theme); // Görünüm panelindeki seçim göstergeleri güncellenir
         // Ayarlar sekmesi, kendi <html>'ine data-tema özelliğini hiç eklemiyordu, bu yüzden kullanıcı "Açık" seçse de panel tokens.css'teki varsayılan koyu zemini kullanıyordu
@@ -1124,13 +1088,13 @@ window.chrome.webview.addEventListener("message", function (olay) {
     else if (veri.type === "profiles") { // Profil listesi geldiyse
         profilListesiniCiz(veri.profiles, veri.active);
     }
+    else if (veri.type === "backgroundgallery") { // "resimler" klasöründeki fotoğrafların listesi geldiyse
+        arkaplanGalerisiniCiz(veri.images);
+    }
     else if (veri.type === "store_extension_result") { // Mağaza adresinden uzantı yükleme denemesinin sonucu geldiyse
         const durumOgesi = document.getElementById("magaza-uzanti-durum");
         durumOgesi.textContent = veri.success ? "Uzantı başarıyla yüklendi." : ("Yükleme başarısız: " + (veri.error || "bilinmeyen hata"));
         document.getElementById("buton-magaza-uzanti-yukle").disabled = false;
-    }
-    else if (veri.type === "userscripts") { // Kullanıcı betikleri listesi geldiyse
-        betiklerListesiniCiz(veri.entries);
     }
     else if (veri.type === "cards") { // Kart listesi geldiyse
         kartListesiniCiz(veri.entries);

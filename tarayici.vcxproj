@@ -64,6 +64,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <!-- WebView2 kütüphanesinin başlık dosyasının (WebView2.h) bulunduğu klasör, derleyiciye ekstra bir arama yeri olarak bildirilir -->
       <AdditionalIncludeDirectories>$(ProjectDir)thirdparty\WebView2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- Kaynak dosyalar BOM içermeyen UTF-8 olarak kaydedildiği için, bu bayrak olmadan derleyici onları sistemin Türkçe (CP1254) kod sayfasıyla yorumluyor, bu da L"" içindeki Türkçe harfleri (ç, ğ, ı, ö, ş, ü) bozup çalışma zamanında "Ã§", "ÅŸ" gibi mojibake üretiyordu; /utf-8, hem kaynağın hem programın çalışırken ürettiği metinlerin UTF-8 kabul edilmesini sağlar -->
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <!-- Programın pencere tabanlı bir uygulama olarak bağlanacağı bağlayıcıya bildirilir, böylece siyah bir konsol penceresi açılmaz -->
@@ -74,7 +76,8 @@
       <!-- crypt32.lib, şifre yöneticisinin DPAPI şifreleme fonksiyonlarını (CryptProtectData, CryptUnprotectData) kullanabilmesi için eklenir -->
       <!-- winhttp.lib, gömülü DevTools panelinin doğru sekmeyi bulmak için WebView2'nin yerel hata ayıklama (remote debugging) adresine HTTP isteği atabilmesi için eklenir -->
       <!-- oleaut32.lib, sertifika hatası panelinin sertifika geçerlilik tarihlerini (OLE otomasyon tarihi biçiminde) okunabilir bir tarihe çevirmek için eklenir -->
-      <AdditionalDependencies>WebView2LoaderStatic.lib;crypt32.lib;winhttp.lib;oleaut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <!-- windowscodecs.lib, arka plan galerisindeki fotoğrafların küçük (128x128) önizlemelerini WIC (Windows Imaging Component) ile anlık olarak oluşturup diske yazabilmek için eklenir -->
+      <AdditionalDependencies>WebView2LoaderStatic.lib;crypt32.lib;winhttp.lib;oleaut32.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
@@ -93,6 +96,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <!-- WebView2 kütüphanesinin başlık dosyasının bulunduğu klasör, derleyiciye ekstra bir arama yeri olarak bildirilir -->
       <AdditionalIncludeDirectories>$(ProjectDir)thirdparty\WebView2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- Kaynak dosyalar BOM içermeyen UTF-8 olarak kaydedildiği için, bu bayrak olmadan derleyici onları sistemin Türkçe (CP1254) kod sayfasıyla yorumluyor, bu da L"" içindeki Türkçe harfleri (ç, ğ, ı, ö, ş, ü) bozup çalışma zamanında "Ã§", "ÅŸ" gibi mojibake üretiyordu; /utf-8, hem kaynağın hem programın çalışırken ürettiği metinlerin UTF-8 kabul edilmesini sağlar -->
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -105,7 +110,8 @@
       <!-- crypt32.lib, şifre yöneticisinin DPAPI şifreleme fonksiyonlarını (CryptProtectData, CryptUnprotectData) kullanabilmesi için eklenir -->
       <!-- winhttp.lib, gömülü DevTools panelinin doğru sekmeyi bulmak için WebView2'nin yerel hata ayıklama (remote debugging) adresine HTTP isteği atabilmesi için eklenir -->
       <!-- oleaut32.lib, sertifika hatası panelinin sertifika geçerlilik tarihlerini (OLE otomasyon tarihi biçiminde) okunabilir bir tarihe çevirmek için eklenir -->
-      <AdditionalDependencies>WebView2LoaderStatic.lib;crypt32.lib;winhttp.lib;oleaut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <!-- windowscodecs.lib, arka plan galerisindeki fotoğrafların küçük (128x128) önizlemelerini WIC (Windows Imaging Component) ile anlık olarak oluşturup diske yazabilmek için eklenir -->
+      <AdditionalDependencies>WebView2LoaderStatic.lib;crypt32.lib;winhttp.lib;oleaut32.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
@@ -136,6 +142,13 @@
     <ClCompile Include="src\Engelleyici.cpp" />
     <ClInclude Include="src\Engelleyici.h" />
     <ClInclude Include="src\Utf8Yardimci.h" />
+    <ClInclude Include="src\resource.h" />
+  </ItemGroup>
+
+  <!-- Programın pencere/görev çubuğu simgesini (.ico) programa gömen kaynak dosyası burada derlemeye dahil edilir -->
+  <ItemGroup>
+    <ResourceCompile Include="src\tarayici.rc" />
+    <Image Include="src\app.ico" />
   </ItemGroup>
 
   <!-- Derleme her bittiğinde, toolbar arayüzünün HTML/CSS/JS dosyalarını içeren assets klasörünün, çıkan programın yanına kopyalanmasını sağlayan adım burada tanımlanır -->

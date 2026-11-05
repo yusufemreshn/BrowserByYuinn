@@ -23,7 +23,7 @@ struct AyarVerisi
     bool cikistaTemizle = false; // Açıksa, program penceresi kapatılırken aşağıdaki kategoriler otomatik olarak temizlenir
     std::wstring cikistaTemizleKategoriler; // "gecmis,cerez,onbellek" gibi virgülle ayrılmış kategori listesi, VeriTemizle fonksiyonundaki kategori adlarıyla aynı isimlendirmeyi kullanır
     std::wstring haricTutulanSiteler; // "|" ile ayrılmış site adresi listesi; bu adresler hem çıkışta otomatik temizlemeden hem de Ayarlar sayfasındaki geçmiş temizleme işleminden her zaman muaf tutulur
-    bool indirmeKonumunuHerSeferSor = false; // Açıksa, her indirme başladığında kullanıcıya kaydedilecek klasör sorulur, kapalıyken varsayılan indirme klasörüne sessizce iner
+    bool indirmeKonumunuHerSeferSor = true; // Açıksa, her indirme başladığında kullanıcıya kaydedilecek klasör sorulur, kapalıyken varsayılan indirme klasörüne sessizce iner; varsayılan olarak açık gelir
     bool enerjiTasarrufuModu = false; // Açıksa, sekme uykuya alma eşiği daha agresif uygulanır ve arayüz animasyonları kısılır; dizüstü pil durumuna bağlı otomatik tetikleme BrowserWindow tarafında yapılır
     bool sonOturumuGeriYukle = false; // Açıksa, program açılışında hızlı erişim sayfası yerine, bir önceki kapanıştaki açık sekmeler geri yüklenir
     bool sizintiKontroluAcikMi = false; // Açıksa, şifre listesindeki "Sızıntı Kontrolü" butonu internete (Have I Been Pwned k-anonymity API'si) istek atabilir; gizlilik hassasiyeti nedeniyle varsayılan kapalıdır, şifrenin kendisi asla ağa gönderilmez, sadece SHA-1 özetinin ilk 5 karakteri gönderilir

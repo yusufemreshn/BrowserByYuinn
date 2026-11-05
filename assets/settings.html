@@ -172,29 +172,6 @@
 
                     <div class="ayar-satiri ayar-satiri-genis">
                         <div class="ayar-metin">
-                            <div class="ayar-baslik">Köşe yuvarlaklığı</div>
-                            <div class="ayar-aciklama">Panellerin ve düğmelerin köşe stili</div>
-                        </div>
-                        <div class="segment-grup" id="kose-secenekleri">
-                            <button class="segment" data-kose="kesik">Kesik</button>
-                            <button class="segment" data-kose="orta">Orta</button>
-                            <button class="segment" data-kose="yuvarlak">Yuvarlak</button>
-                        </div>
-                    </div>
-
-                    <div class="ayar-satiri ayar-satiri-genis">
-                        <div class="ayar-metin">
-                            <div class="ayar-baslik">Sekme şeridi yoğunluğu</div>
-                            <div class="ayar-aciklama">Üstteki sekme çubuğundaki sekmelerin boyutu</div>
-                        </div>
-                        <div class="segment-grup" id="yogunluk-secenekleri">
-                            <button class="segment" data-yogunluk="normal">Geniş</button>
-                            <button class="segment" data-yogunluk="kompakt">Kompakt</button>
-                        </div>
-                    </div>
-
-                    <div class="ayar-satiri ayar-satiri-genis">
-                        <div class="ayar-metin">
                             <div class="ayar-baslik">Yazı boyutu</div>
                             <div class="ayar-aciklama">Arayüz genelindeki temel metin boyutu</div>
                         </div>
@@ -212,28 +189,22 @@
                         </div>
                         <label class="anahtar"><input type="checkbox" id="anahtar-yerimi-cubugu" checked /><span class="anahtar-kaydirici"></span></label>
                     </div>
-                    <div class="ayar-satiri">
+                    <div class="ayar-satiri ayar-satiri-genis">
                         <div class="ayar-metin">
                             <div class="ayar-baslik">Yeni sekme arka planı</div>
                             <div class="ayar-aciklama" id="arkaplan-dosya-adi">Varsayılan desenli arka plan kullanılıyor</div>
                         </div>
-                        <button id="buton-arkaplan-sec" class="buton-ikincil">Resim Seç</button>
-                        <button id="buton-arkaplan-kaldir" class="buton-ikincil">Kaldır</button>
+                        <div id="arkaplan-galeri"></div> <!-- Programla birlikte gelen resimler klasöründeki fotoğraflar, settings.js tarafından burada küçük bir galeri olarak dizilir -->
+                        <div class="ayar-satiri" style="padding:0">
+                            <button id="buton-arkaplan-sec" class="buton-ikincil">Kendi Resmimi Ekle…</button>
+                            <button id="buton-arkaplan-kaldir" class="buton-ikincil">Rastgele Seç</button>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <section id="panel-gizlilik" class="panel"> <!-- Gizlilik ve güvenlik ayarları paneli -->
                 <div class="ayarlar-karti">
-                    <div class="ayar-satiri">
-                        <div class="ayar-metin">
-                            <div class="ayar-baslik">Veri temizleme</div>
-                            <div class="ayar-aciklama">Zaman aralığı ve kategori seçerek veri silme, artık Geçmiş sekmesinde yapılıyor</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ayarlar-karti" style="margin-top:14px">
                     <div class="ayar-satiri">
                         <div class="ayar-metin">
                             <div class="ayar-baslik">Reklam engelleme</div>
@@ -495,22 +466,6 @@
                     </div>
                 </div>
                 <div id="uzantilar-listesi" class="liste-karti"></div>
-
-                <div class="ayarlar-karti" style="margin-top:14px">
-                    <div class="ayar-satiri ayar-satiri-genis">
-                        <div class="ayar-metin">
-                            <div class="ayar-baslik">Kullanıcı betiği (userscript) ekle</div>
-                            <div class="ayar-aciklama">Belirttiğiniz desene uyan sitelerde otomatik çalışır, örnek desen: *://*.example.com/*</div>
-                        </div>
-                        <div id="betik-ekle-form">
-                            <input id="girdi-betik-ad" type="text" placeholder="Betik adı" />
-                            <input id="girdi-betik-desen" type="text" placeholder="*://*.example.com/*" />
-                            <textarea id="girdi-betik-kod" rows="4" placeholder="// JavaScript kodunuz&#10;document.body.style.filter = 'sepia(0.3)';"></textarea>
-                            <button id="buton-betik-ekle">Ekle</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="betikler-listesi" class="liste-karti"></div>
             </section>
 
             <section id="panel-kisayollar" class="panel"> <!-- Klavye kısayollarını özelleştirme paneli -->

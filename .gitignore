@@ -19,6 +19,11 @@
 
 # Claude Code / ajan araçları yerel durumu
 .claude/
+.agents/
+skills-lock.json
+
+# Resim galerisi için otomatik üretilen küçük önizleme önbelleği
+resimler/.thumbs/
 
 # WebView2 SDK (Microsoft'un NuGet paketinden gelir, lisans gereği repoya eklenmez)
 /thirdparty/WebView2/

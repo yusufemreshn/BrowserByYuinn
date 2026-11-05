@@ -448,6 +448,24 @@ void BrowserWindow::ToolbarWebViewOlustur()
                 m_toolbarWebView.As(&toolbarWebViewSurum3); // Elimizdeki WebView2 nesnesinin bu daha yeni sürümüne geçiş yapılır
                 toolbarWebViewSurum3->SetVirtualHostNameToFolderMapping(L"tarayici.local", varliklarKlasoru.c_str(), COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_ALLOW); // Sahte güvenli adres ile gerçek klasör eşleştirilir
 
+                // Program her açılışta, kendi dahili sayfalarımızın (chrome.html, newtab.html, settings.html gibi) disk önbelleğini bir kere temizliyoruz
+                // Aksi halde, tarayici.local üzerinden servis edilen bu dosyalar Chromium'un normal HTTP önbelleğine girer, biz dosyayı diskte güncellesek bile (örneğin yeni bir derleme sonrası) eski önbellekteki sürüm günlerce gösterilmeye devam edebilir
+                // Bu temizlik tüm profil için tek seferliktir (profilin paylaşılan tek önbelleği olduğu için bir WebView2 üzerinden tetiklenmesi yeterlidir), gerçek internet sitelerinin önbelleğini de temizler ama bu, programın hâlâ geliştirme aşamasında olması göz önüne alınınca kabul edilebilir bir bedeldir
+                ComPtr<ICoreWebView2_13> toolbarWebViewSurum13;
+                m_toolbarWebView.As(&toolbarWebViewSurum13);
+                if (toolbarWebViewSurum13)
+                {
+                    ComPtr<ICoreWebView2Profile> profil;
+                    toolbarWebViewSurum13->get_Profile(&profil);
+                    ComPtr<ICoreWebView2Profile2> profilSurum2;
+                    if (profil) { profil.As(&profilSurum2); }
+                    if (profilSurum2)
+                    {
+                        profilSurum2->ClearBrowsingDataInTimeRange(COREWEBVIEW2_BROWSING_DATA_KINDS_DISK_CACHE, 0.0, static_cast<double>(time(nullptr)),
+                            Callback<ICoreWebView2ClearBrowsingDataCompletedHandler>([](HRESULT) -> HRESULT { return S_OK; }).Get());
+                    }
+                }
+
                 m_toolbarWebView->add_WebMessageReceived(
                     Callback<ICoreWebView2WebMessageReceivedEventHandler>(
                         [this](ICoreWebView2* gonderen, ICoreWebView2WebMessageReceivedEventArgs* argumanlar) -> HRESULT
@@ -1161,6 +1179,7 @@ void BrowserWindow::SekmeDenetleyicisiHazirlandi(ICoreWebView2Controller* denetl
         SekmeyeMesajGonder(yeniId, L"{\"type\":\"theme\",\"theme\":" + TemaNesnesiJsonYap(gunceAyarlar) + L"}"); // Tema bilgisi gönderilir
         std::vector<SayfaKaydi> enCokZiyaretEdilenler = EnCokZiyaretEdilenler(8); // Geçmişten, en çok ziyaret edilen en fazla sekiz site hesaplanır
         SekmeyeMesajGonder(yeniId, L"{\"type\":\"topsites\",\"entries\":" + SayfaKayitlariniJsonYap(enCokZiyaretEdilenler) + L"}"); // Hızlı erişim listesi gönderilir
+        YeniSekmeArkaPlaniniGonder(yeniId); // Arka plan resmi isteği de aynı sebepten cevapsız kalmıştı, bu da burada yeniden gönderilir, aksi halde sekme hiçbir zaman resim almayıp CSS'teki sabit varsayılan arka plana düşer
     }
     else // Aksi halde, bu sekme daha önce hiç bu adrese gezinmemiştir, normal şekilde gezinilir
     {
@@ -3151,6 +3170,9 @@ void BrowserWindow::MenuyuAc()
     // Pencerenin tamamını, tüm alt WebView2 pencereleri dahil olmak üzere hemen yeniden çizmeye zorlamak, bu bayat (stale) görüntüyü düzeltip gerçek içeriğin boyanmasını tetikler
     RedrawWindow(m_pencere, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN | RDW_ERASE);
 
+    AyarVerisi gunceAyarlarMenu = Ayarlar::Oku(); // Panel her açıldığında güncel tema (özellikle açık/koyu mod) da gönderilir, aksi halde panel kendi ayrı sayfası olduğu için toolbar'daki moddan habersiz kalıp hep varsayılan koyu görünürdü
+    MenuyeMesajGonder(L"{\"type\":\"theme\",\"theme\":" + TemaNesnesiJsonYap(gunceAyarlarMenu) + L"}");
+
     DWORD ramMB = ToplamRamKullanimiMB(); // Panel her açıldığında güncel RAM kullanımı hesaplanır
     MenuyeMesajGonder(L"{\"type\":\"ramstatus\",\"ramMB\":" + std::to_wstring(ramMB) + L"}"); // ve panele gönderilir
 
@@ -3810,11 +3832,81 @@ static std::wstring GorselMimeTuruTahminEt(const std::wstring& dosyaYolu)
     return L"image/jpeg"; // jpg/jpeg ve tanınmayan her uzantı için makul bir varsayılan
 }
 
-// Bu fonksiyon, kullanıcının seçtiği özel arka plan resmini diskten okur, Base64 ile kodlayıp bir "data:" adresi olarak verilen sekmeye gönderir
+// Bu fonksiyon, exe'nin bulunduğu klasörden başlayıp üst klasörlere doğru "resimler" adında bir klasör arar (hem geliştirme ortamındaki proje köküne hem de ileride çıkabilecek bir dağıtım klasörüne aynı anda uyması için), bulduğu ilk klasörün tam yolunu döndürür, hiçbir seviyede bulamazsa boş metin döndürür
+static std::wstring ResimlerKlasorunuBul()
+{
+    wchar_t exeYolu[MAX_PATH] = {};
+    GetModuleFileNameW(nullptr, exeYolu, MAX_PATH);
+    std::wstring klasor = exeYolu;
+    size_t sonTersBolu = klasor.find_last_of(L'\\');
+    klasor = (sonTersBolu == std::wstring::npos) ? L"." : klasor.substr(0, sonTersBolu); // exe'nin bulunduğu klasörle başlanır
+
+    for (int seviye = 0; seviye < 4; seviye++) // exe klasöründen başlayıp en fazla dört üst klasöre kadar aranır (x64\Debug gibi iki seviye derin çıktı klasörlerini de kapsar)
+    {
+        std::wstring aday = klasor + L"\\resimler";
+        DWORD oznitelikler = GetFileAttributesW(aday.c_str());
+        if (oznitelikler != INVALID_FILE_ATTRIBUTES && (oznitelikler & FILE_ATTRIBUTE_DIRECTORY)) { return aday; } // Bu seviyede "resimler" adında bir klasör bulunduysa hemen döndürülür
+
+        size_t ustSeviye = klasor.find_last_of(L'\\');
+        if (ustSeviye == std::wstring::npos) { break; } // Kök klasöre ulaşıldı, daha yukarı çıkılamaz
+        klasor = klasor.substr(0, ustSeviye);
+    }
+    return L""; // Hiçbir seviyede bulunamadı
+}
+
+// Bu fonksiyon, resimler klasöründeki tüm desteklenen resim dosyalarının tam yollarını bir listeye toplar
+static std::vector<std::wstring> ResimlerKlasorunuTara(const std::wstring& klasor)
+{
+    std::vector<std::wstring> resimYollari;
+    WIN32_FIND_DATAW bulunan;
+    HANDLE arama = FindFirstFileW((klasor + L"\\*").c_str(), &bulunan);
+    if (arama != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            if (bulunan.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) { continue; } // Alt klasörler atlanır, sadece doğrudan içindeki dosyalara bakılır
+            std::wstring dosyaAdi = bulunan.cFileName;
+            size_t nokta = dosyaAdi.find_last_of(L'.');
+            if (nokta == std::wstring::npos) { continue; }
+            std::wstring uzanti = dosyaAdi.substr(nokta + 1);
+            for (wchar_t& harf : uzanti) { harf = static_cast<wchar_t>(towlower(harf)); }
+            if (uzanti == L"jpg" || uzanti == L"jpeg" || uzanti == L"png" || uzanti == L"webp" || uzanti == L"gif")
+            {
+                resimYollari.push_back(klasor + L"\\" + dosyaAdi);
+            }
+        } while (FindNextFileW(arama, &bulunan));
+        FindClose(arama);
+    }
+    return resimYollari;
+}
+
+// Bu fonksiyon, resimler klasöründeki resim dosyalarından birini "torba" (shuffle-bag) yöntemiyle seçer: m_gosterilmemisArkaPlanlar listesindeki tüm resimler, bir sonraki resim seçilmeden önce HEPSİ birer birer tüketilir, böylece klasörde beş resim varsa, altıncı seçime kadar hiçbiri ikinci kez tekrarlanmaz; torba boşalınca (veya klasördeki resim sayısı değiştiyse, örneğin kullanıcı yeni resim ekleyip sildiyse) klasör yeniden taranıp torba baştan doldurulur
+std::wstring BrowserWindow::RastgeleKlasorResmiSec()
+{
+    std::wstring klasor = ResimlerKlasorunuBul();
+    if (klasor.empty()) { return L""; } // Klasör hiçbir seviyede bulunamadı
+
+    if (m_gosterilmemisArkaPlanlar.empty()) // Torba boşsa (program daha hiç resim göstermemiştir, ya da döngünün sonuna gelinmiştir), klasör yeniden taranıp torba baştan doldurulur
+    {
+        m_gosterilmemisArkaPlanlar = ResimlerKlasorunuTara(klasor);
+    }
+    if (m_gosterilmemisArkaPlanlar.empty()) { return L""; } // Klasör var ama içinde desteklenen bir resim yok
+
+    static bool tohumlandiMi = false; // rand(), her program açılışında aynı sabit diziyi üretmesin diye bir kere, programın açılış anına göre tohumlanır
+    if (!tohumlandiMi) { srand(static_cast<unsigned int>(GetTickCount64())); tohumlandiMi = true; }
+
+    size_t secilenIndeks = static_cast<size_t>(rand()) % m_gosterilmemisArkaPlanlar.size(); // Torbadaki, henüz bu döngüde gösterilmemiş resimlerden biri rastgele seçilir
+    std::wstring secilenYol = m_gosterilmemisArkaPlanlar[secilenIndeks];
+    m_gosterilmemisArkaPlanlar.erase(m_gosterilmemisArkaPlanlar.begin() + secilenIndeks); // Seçilen resim torbadan çıkarılır, bu döngüde bir daha seçilemez
+    return secilenYol;
+}
+
+// Bu fonksiyon, kullanıcının seçtiği özel arka plan resmini diskten okur, Base64 ile kodlayıp bir "data:" adresi olarak verilen sekmeye gönderir, kullanıcı elle bir resim seçmediyse "resimler" klasöründen rastgele bir resim denenir, o da yoksa boş bir adres gönderilir
 void BrowserWindow::YeniSekmeArkaPlaniniGonder(int sekmeId)
 {
     std::wstring yol = Ayarlar::Oku().yeniSekmeArkaPlanYolu; // Güncel ayarlardan, seçilmiş resmin yolu okunur
-    if (yol.empty()) // Hiç resim seçilmemişse
+    if (yol.empty()) { yol = RastgeleKlasorResmiSec(); } // Elle seçilmiş bir resim yoksa, resimler klasöründen rastgele biri denenir
+    if (yol.empty()) // Elle seçilmiş resim de, resimler klasörü de yoksa
     {
         SekmeyeMesajGonder(sekmeId, L"{\"type\":\"newtabbackground\",\"dataUrl\":null}");
         return;
@@ -4398,6 +4490,7 @@ void BrowserWindow::TemayiToolbaraGonder()
     AyarVerisi a = Ayarlar::Oku(); // Güncel ayarlar diskten okunur
     std::wstring mesaj = L"{\"type\":\"theme\",\"theme\":" + TemaNesnesiJsonYap(a) + L"}"; // Tema bilgisi bir JSON nesnesi olarak hazırlanır
     ToolbaraMesajGonder(mesaj); // Hazırlanan mesaj toolbar arayüzüne gönderilir
+    MenuyeMesajGonder(mesaj); // Hamburger menü paneli, kendi ayrı sayfası olduğu için toolbar'dan habersizdir, bu yüzden aynı mesaj ona da ayrıca gönderilir
 }
 
 // Bu fonksiyon, kayıtlı yer imlerini okuyup toolbar arayüzündeki yer imi çubuğuna gönderir

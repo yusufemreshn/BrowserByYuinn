@@ -42,4 +42,14 @@ window.chrome.webview.addEventListener("message", function (olay) {
     else if (veri.type === "zoom") { // Eğer gelen mesaj güncel yakınlaştırma yüzdesiyse
         menuYakinlastirYuzde.textContent = veri.zoomPercent + "%"; // Menüdeki yakınlaştırma yüzdesi güncellenir
     }
+    else if (veri.type === "theme") { // Eğer gelen mesaj güncel tema bilgisiyse
+        // Bu panel, toolbar'dan (chrome.html) AYRI bir sayfa olduğu için <html>'ine hiç data-tema eklenmez, tokens.css'teki açık/koyu kuralları kendi başına hiç tetiklenmez, bu yüzden aynı uygulama burada da tekrarlanır
+        const tema = veri.theme;
+        document.documentElement.style.setProperty("--vurgu-rengi", tema.accent);
+        const koseDegerleri = { kesik: "4px", orta: "10px", yuvarlak: "18px" };
+        document.documentElement.style.setProperty("--radius", koseDegerleri[tema.radius] || "10px");
+        if (tema.mode === "acik") { document.documentElement.setAttribute("data-tema", "acik"); }
+        else if (tema.mode === "yuksekkontrast") { document.documentElement.setAttribute("data-tema", "yuksekkontrast"); }
+        else { document.documentElement.removeAttribute("data-tema"); }
+    }
 });

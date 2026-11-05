@@ -8,18 +8,11 @@ html, body {
     align-items: center; /* İçerik dikeyde ortalanır */
     justify-content: center; /* İçerik yatayda ortalanır */
     width: 100%; /* Body, flex öğesi olduğu için içeriğe göre daralmasın diye tüm genişliği kaplaması sağlanır, aksi halde arka plan sadece dar bir sütunda görünür */
+    background-image: url("varsayilan-arkaplan.svg"); /* Kullanıcı Ayarlar > Görünüm'den kendi resmini seçmediği sürece gösterilen sabit, tek varsayılan arka plan */
     background-size: cover; /* Arka plan deseni, pencereyi tamamen kaplayacak şekilde ölçeklenir */
     background-position: center; /* Arka plan deseni, her zaman ortadan gösterilir */
     background-attachment: fixed; /* Pencere yeniden boyutlanırken arka plan sabit kalır */
 }
-
-/* Her yeni sekme açılışında, bu altı zarif desenden biri rastgele seçilir, newtab.js içindeki arkaPlanSec fonksiyonu bu sınıflardan birini body'e ekler */
-.arka-plan-1 { background-image: linear-gradient(135deg, #0f2027, #203a43, #2c5364); } /* Gece mavisi, sakin bir deniz görünümü */
-.arka-plan-2 { background-image: linear-gradient(135deg, #1a0e2e, #5b1a52, #b3436b); } /* Alacakaranlık moru, sıcak bir gün batımı hissi */
-.arka-plan-3 { background-image: linear-gradient(135deg, #0b3d2e, #136a5e, #3ac19b); } /* Orman yeşili, ferah bir doğa dokusu */
-.arka-plan-4 { background-image: linear-gradient(135deg, #1e0a3c, #6a0572, #ab236d); } /* Derin eflatun, gece gökyüzü gibi */
-.arka-plan-5 { background-image: linear-gradient(135deg, #1a120b, #6e4a1f, #c89b3c); } /* Amber ve bronz, sıcak bir çöl tonu */
-.arka-plan-6 { background-image: linear-gradient(135deg, #020024, #1b1464, #2fb6c4); } /* İndigo ve camgöbeği, soğuk bir kuzey ışığı tonu */
 
 #newtab-govde {
     text-align: center; /* İçerik ortalanır */

@@ -1049,6 +1049,10 @@ window.chrome.webview.addEventListener("message", function (olay) {
         seciliYogunluk = veri.theme.density; // Seçili yoğunluk, kayıtlı değere ayarlanır
         seciliYaziBoyutu = veri.theme.fontSize; // Seçili yazı boyutu, kayıtlı değere ayarlanır
         gorunumSecimleriniGuncelle(veri.theme); // Görünüm panelindeki seçim göstergeleri güncellenir
+        // Ayarlar sekmesi, kendi <html>'ine data-tema özelliğini hiç eklemiyordu, bu yüzden kullanıcı "Açık" seçse de panel tokens.css'teki varsayılan koyu zemini kullanıyordu
+        if (veri.theme.mode === "acik") { document.documentElement.setAttribute("data-tema", "acik"); }
+        else if (veri.theme.mode === "yuksekkontrast") { document.documentElement.setAttribute("data-tema", "yuksekkontrast"); }
+        else { document.documentElement.removeAttribute("data-tema"); }
 
         document.getElementById("anahtar-cikista-temizle").checked = veri.exitClean; // Çıkışta otomatik temizleme anahtarı, kayıtlı değere ayarlanır
         document.querySelectorAll("#cikista-temizle-kategoriler input[data-cikis-kategori]").forEach(function (kutu) {

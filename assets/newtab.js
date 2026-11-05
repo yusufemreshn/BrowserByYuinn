@@ -3,10 +3,6 @@
 
 document.title = "Yeni Sekme"; // Sekme şeridinde bu sayfanın başlığı "Yeni Sekme" olarak görünsün diye sayfa başlığı burada ayarlanır
 
-const ARKA_PLAN_SAYISI = 6; // newtab.css içinde tanımlı arka plan deseni sayısı, yeni bir desen eklendiğinde bu sayı da güncellenmelidir
-const rastgeleArkaPlanNumarasi = Math.floor(Math.random() * ARKA_PLAN_SAYISI) + 1; // Her sayfa açılışında 1 ile 6 arasında rastgele bir sayı seçilir
-document.body.classList.add("arka-plan-" + rastgeleArkaPlanNumarasi); // Seçilen numaraya karşılık gelen desen sınıfı, body'e eklenerek arka plan değiştirilir
-
 // Bu fonksiyon, verilen bir site adından, hızlı erişim kutusunda gösterilecek tek harfi (genellikle alan adının ilk harfi) döndürür
 function ilkHarfiAl(metin) {
     return metin && metin.length > 0 ? metin.charAt(0) : "?"; // Metin boş değilse ilk karakteri, boşsa soru işareti döndürülür

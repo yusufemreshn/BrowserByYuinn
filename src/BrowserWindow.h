@@ -304,6 +304,9 @@ private:
     // Bu fonksiyon, açık olan tüm hızlı erişim (yeni sekme) sekmelerine, güncel özel arka plan resmini yeniden gönderir, resim Ayarlar'dan değiştirildiğinde/kaldırıldığında çağrılır
     void YeniSekmeArkaPlaniniTumSekmelereGonder();
 
+    // Bu fonksiyon, kullanıcının elle tek bir resim seçmediği durumda, "resimler" klasöründe bulduğu resim dosyalarından rastgele birinin tam yolunu döndürür, klasör yoksa veya içinde hiç resim yoksa boş metin döndürür
+    std::wstring RastgeleKlasorResmiSec();
+
     // Bu fonksiyon, adres çubuğu öneri panelini gösterecek AYRI denetleyiciyi oluşturur, program açılışında bir kere çağrılır, panel bu aşamada henüz görünmezdir
     void OneriWebViewOlustur();
 
@@ -437,6 +440,8 @@ private:
         ULONGLONG hazirlananZaman = 0; // Bu yedeğin hazır hale geldiği an, uzun süre kullanılmazsa kapatılabilmesi için
     };
     std::vector<YedekSekme> m_yedekler; // Art arda hızlıca açılan birkaç sekmenin de anında açılabilmesi için, tek bir yedek yerine küçük bir havuz tutulur
+
+    std::vector<std::wstring> m_gosterilmemisArkaPlanlar; // "resimler" klasöründeki resimlerden, program bu açılışında henüz hiçbir sekmede gösterilmemiş olanların listesi, RastgeleKlasorResmiSec tarafından kullanılır, bu liste tükenince resimler klasörü yeniden okunup baştan doldurulur (bu sayede hepsi gösterilmeden hiçbiri ikinci kez gösterilmez), sadece bellekte tutulur, program kapanınca sıfırlanır
     static const size_t YedekHavuzuHedefBoyutu = 3; // Aynı anda hazır tutulacak azami yedek sayısı, art arda hızlı sekme açma ile boşta duran RAM arasındaki dengeyi belirler
 
     // Bu bayrak, pencere kapanmaya başladığında (WM_DESTROY) false yapılır, CapturePreview gibi asenkron WebView2 çağrılarının tamamlanma geri çağırmaları çalışmaya başlamadan önce bu bayrağı kontrol eder

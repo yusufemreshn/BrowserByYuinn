@@ -57,22 +57,30 @@ static std::wstring CalismaKlasoruBul()
 // Bu fonksiyon, adres çubuğuna veya arama kutusuna yazılacak bir metni, bir web adresinin içine güvenli şekilde koyabilmek için kodlar
 static std::wstring MetniAdresIcinKodla(const std::wstring& metin)
 {
-    std::wstring sonuc; // Kodlanmış sonucu biriktirecek boş bir metin oluşturulur
-    for (wchar_t karakter : metin) // Verilen metindeki her karakter sırayla gezilir
+    // Önce metin UTF-8 byte dizisine çevrilir, çünkü yüzde kodlaması UTF-16 kod noktası üzerinden değil UTF-8 byte'ları üzerinden yapılmalıdır (aksi halde ğ, ş, ı gibi harfler bozulur)
+    int gerekliBoyut = WideCharToMultiByte(CP_UTF8, 0, metin.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    std::string utf8Metin(gerekliBoyut > 0 ? gerekliBoyut - 1 : 0, '\0'); // Sondaki null karakter hariç tutulur
+    if (gerekliBoyut > 0)
     {
-        if ((karakter >= L'a' && karakter <= L'z') || (karakter >= L'A' && karakter <= L'Z') || (karakter >= L'0' && karakter <= L'9') || karakter == L'-' || karakter == L'_' || karakter == L'.')
+        WideCharToMultiByte(CP_UTF8, 0, metin.c_str(), -1, utf8Metin.data(), gerekliBoyut, nullptr, nullptr);
+    }
+
+    std::wstring sonuc; // Kodlanmış sonucu biriktirecek boş bir metin oluşturulur
+    for (unsigned char bayt : utf8Metin) // UTF-8 byte dizisindeki her byte sırayla gezilir
+    {
+        if ((bayt >= 'a' && bayt <= 'z') || (bayt >= 'A' && bayt <= 'Z') || (bayt >= '0' && bayt <= '9') || bayt == '-' || bayt == '_' || bayt == '.')
         {
-            sonuc += karakter; // Harf, rakam veya zararsız bir işaretse, olduğu gibi bırakılır
+            sonuc += static_cast<wchar_t>(bayt); // Harf, rakam veya zararsız bir işaretse, olduğu gibi bırakılır
         }
-        else if (karakter == L' ') // Eğer karakter bir boşluksa
+        else if (bayt == ' ') // Eğer karakter bir boşluksa
         {
             sonuc += L"%20"; // Web adreslerinde boşluk yüzde yirmi olarak yazılır
         }
-        else // Diğer tüm özel karakterler için
+        else // Diğer tüm özel byte'lar için
         {
-            wchar_t tamponMetin[8]; // Karakterin yüzde kodlu halini yazmak için küçük bir tampon oluşturulur
-            swprintf_s(tamponMetin, L"%%%02X", static_cast<unsigned int>(karakter)); // Karakterin sayısal değeri, iki haneli onaltılık taban olarak yazılır
-            sonuc += tamponMetin; // Kodlanmış karakter, sonuca eklenir
+            wchar_t tamponMetin[8]; // Byte'ın yüzde kodlu halini yazmak için küçük bir tampon oluşturulur
+            swprintf_s(tamponMetin, L"%%%02X", static_cast<unsigned int>(bayt)); // Byte'ın sayısal değeri, iki haneli onaltılık taban olarak yazılır
+            sonuc += tamponMetin; // Kodlanmış byte, sonuca eklenir
         }
     }
     return sonuc; // Tamamen kodlanmış metin döndürülür
@@ -171,7 +179,11 @@ bool BrowserWindow::Create(HINSTANCE uygulamaOrnegi)
     pencereSinifi.hInstance = uygulamaOrnegi; // Pencere sınıfının ait olduğu uygulama örneği belirtilir
     pencereSinifi.lpszClassName = pencereSinifAdi; // Pencere sınıfının ismi atanır
     pencereSinifi.hCursor = LoadCursor(nullptr, IDC_ARROW); // Fare imlecinin normal ok şeklinde görünmesi sağlanır
-    pencereSinifi.hIcon = LoadIcon(uygulamaOrnegi, MAKEINTRESOURCE(IDI_APPICON)); // Pencerenin başlık çubuğunda ve görev çubuğunda gösterilecek gömülü simge
+    const int buyukIkonBoyutu = GetSystemMetrics(SM_CXICON); // Görev çubuğu ve Alt+Tab'da kullanılan büyük simge, sistemin varsayılan boyutunda yüklenir (asıl sorun simgenin içindeki boşluktu, app.ico artık kenarlara kadar dolu)
+    const int kucukIkonBoyutu = GetSystemMetrics(SM_CXSMICON); // Pencere başlık çubuğu/sistem menüsünde kullanılan küçük simge de varsayılan boyutta yüklenir
+    HICON buyukIkon = (HICON)LoadImage(uygulamaOrnegi, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, buyukIkonBoyutu, buyukIkonBoyutu, 0); // Pencerenin başlık çubuğunda ve görev çubuğunda gösterilecek gömülü simge
+    HICON kucukIkon = (HICON)LoadImage(uygulamaOrnegi, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, kucukIkonBoyutu, kucukIkonBoyutu, 0); // Küçük simge ayrıca belirtilmezse Windows büyük simgeyi küçülterek kullanır, bu da bulanık görünüme yol açar
+    pencereSinifi.hIcon = buyukIkon; // WNDCLASS yapısında sadece büyük simge alanı bulunur, küçük simge aşağıda WM_SETICON ile pencereye ayrıca bildirilir
     RegisterClass(&pencereSinifi); // Pencere sınıfı, Windows işletim sistemine kaydedilir
 
     // Pencere, WS_CAPTION (Windows'un başlık çubuğu) stilini BİLEREK İÇERİR, çünkü Windows'un küçültme/büyütme/geri yükleme sırasındaki akıcı animasyonları, ancak pencere bu stile sahipse çalışır
@@ -186,6 +198,9 @@ bool BrowserWindow::Create(HINSTANCE uygulamaOrnegi)
     {
         return false; // Başarısızlık bildirilir, program devam edemez
     }
+
+    SendMessage(m_pencere, WM_SETICON, ICON_BIG, (LPARAM)buyukIkon); // Görev çubuğu ve Alt+Tab'da gösterilen büyük simge, pencereye açıkça bildirilir
+    SendMessage(m_pencere, WM_SETICON, ICON_SMALL, (LPARAM)kucukIkon); // Başlık çubuğu/sistem menüsünde gösterilen küçük simge, pencereye açıkça bildirilir
 
     m_baslangicZamani = GetTickCount64(); // Programın açıldığı an kaydedilir, Hakkında bölümünde çalışma süresini göstermek için kullanılacaktır
 

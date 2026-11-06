@@ -49,6 +49,7 @@ butonYildiz.addEventListener("click", function () {
 // Panelin boyutu, konumu, görünürlüğü ve dışarı tıklanınca otomatik kapanması tamamen native tarafta (BrowserWindow.cpp) yönetilir, hamburger menüsüyle aynı mantık
 butonKilit.addEventListener("click", function (olay) {
     olay.stopPropagation();
+    butonKilit.setAttribute("aria-expanded", butonKilit.getAttribute("aria-expanded") !== "true"); // Komut bir toggle olduğu için, görünür durum da aynı mantıkla tersine çevrilir
     window.chrome.webview.postMessage("togglesitepaneli");
 });
 
@@ -72,6 +73,7 @@ butonKapat.addEventListener("click", function () {
 // Panelin boyutu, konumu, görünürlüğü ve dışarı tıklanınca otomatik kapanması tamamen native tarafta (BrowserWindow.cpp) yönetilir
 butonHamburger.addEventListener("click", function (olay) {
     olay.stopPropagation();
+    butonHamburger.setAttribute("aria-expanded", butonHamburger.getAttribute("aria-expanded") !== "true"); // Komut bir toggle olduğu için, görünür durum da aynı mantıkla tersine çevrilir
     window.chrome.webview.postMessage("togglemenu");
 });
 
@@ -631,6 +633,7 @@ window.chrome.webview.addEventListener("message", function (olay) {
         butonGeri.disabled = !veri.canGoBack; // Geri gidilemiyorsa, geri butonu pasif hale getirilir
         butonIleri.disabled = !veri.canGoForward; // İleri gidilemiyorsa, ileri butonu pasif hale getirilir
         butonYildiz.classList.toggle("yildiz-dolu", veri.bookmarked); // Sayfa yer imindeyse, yıldız butonu dolu (sarı) renkte gösterilir
+        butonYildiz.setAttribute("aria-pressed", veri.bookmarked); // Ekran okuyucu da butonun basılı (aktif) durumunu duyursun diye
 
         butonKilit.classList.toggle("guvensiz", !veri.secure); // Bağlantı güvenli (https) değilse, kilit ikonu uyarı rengiyle gösterilir
         butonKilit.innerHTML = veri.secure ? "&#x1F512;" : "&#x26A0;"; // Güvenliyse kilit simgesi, değilse bir uyarı simgesi gösterilir

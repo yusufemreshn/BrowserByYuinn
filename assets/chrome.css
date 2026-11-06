@@ -3,6 +3,16 @@
 
 @import url("tokens.css"); /* Ortak tema değişkenleri buradan alınır */
 
+/* Sadece bu dosyayı (toolbar penceresini) etkileyen renk düzeltmesi: referans görseldeki antrasit paleti, tokens.css'teki paylaşımlı koyu temayı değiştirmeden, burada üzerine yazılır, böylece Ayarlar/Yeni Sekme gibi diğer pencereler eski renklerinde kalır */
+:root {
+    --zemin-0: #1e1e20; /* Genel arka plan (sekme şeridinin zemini) */
+    --zemin-1: #3a3a3d; /* Aktif sekme ve toolbar, aynı yüzey tonunu paylaşır */
+    --zemin-2: #29292c; /* Pasif sekmeler ve adres çubuğunun arka planı */
+    --zemin-3: #45454a; /* Hover durumunda belirecek, biraz daha açık ton */
+    --zemin-4: #52525a; /* Kenarlıklar ve en açık hover tonu */
+    --metin-soluk: #d0d0d0; /* Buton ve ikon rengi */
+}
+
 html, body {
     overflow: hidden; /* Toolbar arayüzünün kendi içinde kaydırma çubuğu çıkmaması için taşan içerik gizlenir */
     user-select: none; /* Sekme şeridine çift tıklayınca (büyüt/eski haline döndür) metin seçimi tetiklenmesin diye, toolbar genelinde metin seçimi kapatılır */
@@ -81,8 +91,8 @@ body.yogunluk-kompakt #toolbar { height: 48px; } /* Kompakt yoğunlukta, navigas
 }
 
 .sekme-favicon {
-    width: 14px; /* Favicon yer tutucusunun genişliği */
-    height: 14px; /* Favicon yer tutucusunun yüksekliği */
+    width: 16px; /* Favicon yer tutucusunun genişliği, 21px'in yüzde 75'i */
+    height: 16px; /* Favicon yer tutucusunun yüksekliği, 21px'in yüzde 75'i */
     border-radius: 4px; /* Köşeleri hafifçe yuvarlatılır */
     flex-shrink: 0; /* Sekme daraldığında favicon'un küçülmesi engellenir */
     background-repeat: no-repeat; /* Favicon resmi tekrar etmeden tek kopya gösterilir */
@@ -199,7 +209,7 @@ body.yogunluk-kompakt #toolbar { height: 48px; } /* Kompakt yoğunlukta, navigas
     flex-shrink: 0; /* Şerit daraldığında bu kutunun küçülmesi engellenir */
     margin-bottom: 4px; /* Kutu, sekmelerle aynı hizada görünmesi için hafifçe aşağı itilir */
 }
-#sekme-arama-girdi:focus {
+#sekme-arama-girdi:focus-visible {
     border-color: color-mix(in srgb, var(--vurgu-rengi) 55%, transparent); /* Odaklanıldığında kenarlık, vurgu rengine döner */
 }
 
@@ -262,6 +272,7 @@ body.yogunluk-kompakt #toolbar { height: 48px; } /* Kompakt yoğunlukta, navigas
     height: 56px; /* Toolbar'ın yüksekliği */
     padding: 0 10px; /* Toolbar'ın sol ve sağ kenarlarına küçük bir iç boşluk eklenir */
     gap: 6px; /* Toolbar içindeki öğeler arasına küçük bir boşluk eklenir */
+    margin-top: 4px; /* Sekme şeridiyle toolbar arasında, şerit zemininin göründüğü ince bir boşluk bırakılır */
     background-color: var(--zemin-1); /* Toolbar, sekmelerin aktif rengiyle aynı yüzey tonunu kullanır, bütünlük hissi verir */
 }
 
@@ -308,7 +319,7 @@ body.yogunluk-kompakt #toolbar { height: 48px; } /* Kompakt yoğunlukta, navigas
     padding: 0 14px; /* İç boşluk */
     border-radius: 999px; /* Tam yuvarlak (hap biçimli) kenarlar, adres çubuğuna modern bir görünüm katar */
     background-color: var(--zemin-2); /* Adres çubuğunun arka plan rengi */
-    border: 1px solid transparent; /* Odaklanmadığında görünmeyen bir kenarlık, odaklanınca belirir */
+    border: 1px solid color-mix(in srgb, #5265ff 40%, transparent); /* İnce, mavi-mor tonlu kenarlık */
     transition: border-color 160ms ease, box-shadow 160ms ease; /* Odaklanma geçişi yumuşak olur */
 }
 #adres-cubugu-kabi:focus-within {

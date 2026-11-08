@@ -1,4 +1,4 @@
-// Bu dosya, karşılama (onboarding) ekranının davranışını yönetir: kullanıcının vurgu rengi ve arama motoru seçimini toplar, "Başla" veya "Atla" ile seçimi native tarafa gönderir.
+// Bu dosya, karşılama (onboarding) ekranının davranışını yönetir: kullanıcının vurgu rengi, arama motoru seçimini ve zorunlu gizlilik rıza onayını toplar, "Başla" ile seçimi native tarafa gönderir. Rıza kutusu işaretlenmeden "Başla" butonu aktif olmaz.
 // Bu sayfa, native tarafa her zaman tarayici.local kaynağından mesaj gönderdiği için (BrowserWindow.cpp bunu her mesajda doğrular), güvenle ayrıcalıklı "complete_onboarding" komutunu kullanabilir.
 
 document.title = "Hoş Geldiniz"; // Sekme şeridinde bu sayfanın başlığı "Hoş Geldiniz" olarak görünsün diye sayfa başlığı burada ayarlanır
@@ -30,9 +30,23 @@ document.querySelectorAll("#motor-secenekleri .segment").forEach(function (buton
     });
 });
 
-// Bu fonksiyon, kullanıcının seçimlerini native tarafa gönderip karşılama ekranını kapatır
+const rizaKutusu = document.getElementById("riza-onay-kutusu"); // Zorunlu rıza onayı kutucuğu
+const butonBasla = document.getElementById("buton-basla"); // "Başla" butonu, rıza kutusu işaretlenmeden tıklanamaz
+
+rizaKutusu.addEventListener("change", function () { // Kutucuğun işaretli durumu her değiştiğinde çalışır
+    butonBasla.disabled = !rizaKutusu.checked; // Kutucuk işaretliyse buton aktif olur, işaretli değilse tekrar devre dışı kalır
+});
+
+document.getElementById("riza-detay-link").addEventListener("click", function () { // Gizlilik bildirimi bağlantısına tıklanınca
+    const detayMetni = document.getElementById("riza-detay-metin");
+    detayMetni.classList.toggle("gizli"); // Detaylı metin, tıklandıkça gösterilir veya tekrar gizlenir
+    detayMetni.setAttribute("aria-hidden", detayMetni.classList.contains("gizli") ? "true" : "false");
+});
+
+// Bu fonksiyon, kullanıcının seçimlerini ve rıza onayını native tarafa gönderip karşılama ekranını kapatır
 function tamamla() {
-    const veri = { accent: seciliRenk, searchEngine: seciliMotor }; // Gönderilecek veri hazırlanır
+    if (!rizaKutusu.checked) { return; } // Buton zaten kutucuk işaretlenmeden devre dışı kalır, bu sadece ek bir güvencedir
+    const veri = { accent: seciliRenk, searchEngine: seciliMotor, consent: "evet" }; // Gönderilecek veri hazırlanır; consent, projenin diğer tüm bool alanlarıyla aynı biçimde "evet" metni olarak gönderilir
     window.chrome.webview.postMessage("complete_onboarding|" + JSON.stringify(veri)); // Komut, native tarafa gönderilir, native taraf bu sekmeyi otomatik olarak hızlı erişim sayfasına yönlendirecektir
 }
 
@@ -40,5 +54,4 @@ document.getElementById("buton-varsayilan-tarayici").addEventListener("click", f
     window.chrome.webview.postMessage("open_default_apps_settings");
 });
 
-document.getElementById("buton-basla").addEventListener("click", tamamla); // "Başla" butonuna tıklanınca, seçimlerle birlikte tamamlanır
-document.getElementById("buton-atla").addEventListener("click", tamamla); // "Atla" butonuna tıklanınca da, varsayılan (henüz değiştirilmemiş) seçimlerle birlikte tamamlanır, kullanıcı hiçbir şeyi değiştirmek zorunda kalmaz
+document.getElementById("buton-basla").addEventListener("click", tamamla); // "Başla" butonuna tıklanınca, seçimlerle ve rıza onayıyla birlikte tamamlanır

@@ -50,6 +50,8 @@ namespace Ayarlar // Tüm ayar fonksiyonları, başka isimlerle çakışmaması 
         std::wstring okunanIlkAcilis = JsonAlaniBul(icerik, L"ilkAcilisTamamlandiMi"); // Bu alan da bir metin ("evet"/"hayir") olarak saklanır, diğer tüm alanlarla aynı basit biçimi korumak için
         ayarlar.ilkAcilisTamamlandiMi = (okunanIlkAcilis == L"evet"); // Metin "evet" ise doğru, aksi halde (boşsa veya başka bir şeyse) yanlış kabul edilir
 
+        ayarlar.onaylananRizaSurumu = JsonAlaniBul(icerik, L"onaylananRizaSurumu"); // Alan dosyada hiç yoksa (eski bir ayar dosyasıysa) boş kalır, bu da çalışan .exe'nin güncel sürümüyle asla eşleşmeyeceği için onay ekranının gösterilmesini garantiler
+
         std::wstring okunanYerImiCubugu = JsonAlaniBul(icerik, L"yerImiCubuguGoster");
         if (!okunanYerImiCubugu.empty()) { ayarlar.yerImiCubuguGoster = (okunanYerImiCubugu == L"evet"); } // Alan dosyada hiç yoksa (eski bir ayar dosyasıysa), varsayılan (açık) değerinde kalır
 
@@ -121,6 +123,7 @@ namespace Ayarlar // Tüm ayar fonksiyonları, başka isimlerle çakışmaması 
             + L"\",\"temaModu\":\"" + JsonIcinKacisla(ayarlar.temaModu)
             + L"\",\"koseYuvarlakligi\":\"" + JsonIcinKacisla(ayarlar.koseYuvarlakligi)
             + L"\",\"ilkAcilisTamamlandiMi\":\"" + (ayarlar.ilkAcilisTamamlandiMi ? L"evet" : L"hayir")
+            + L"\",\"onaylananRizaSurumu\":\"" + JsonIcinKacisla(ayarlar.onaylananRizaSurumu)
             + L"\",\"yerImiCubuguGoster\":\"" + (ayarlar.yerImiCubuguGoster ? L"evet" : L"hayir")
             + L"\",\"sifreKasasiKilitlenmeDakikasi\":\"" + std::to_wstring(ayarlar.sifreKasasiKilitlenmeDakikasi)
             + L"\",\"yeniSekmeArkaPlanYolu\":\"" + JsonIcinKacisla(ayarlar.yeniSekmeArkaPlanYolu)

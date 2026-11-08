@@ -16,6 +16,7 @@ struct AyarVerisi
     std::wstring temaModu = L"otomatik"; // Arayüzün açık mı koyu mu görüneceği, "otomatik" (Windows ayarını izler), "acik" veya "koyu" olabilir
     std::wstring koseYuvarlakligi = L"orta"; // Sekme ve kutuların köşe yuvarlaklığı, "kesik", "orta" veya "yuvarlak" olabilir
     bool ilkAcilisTamamlandiMi = false; // Kullanıcının karşılama (onboarding) ekranını görüp tamamladığı/atladığı, program bir daha asla bu ekranı göstermemesi için bunu hatırlar
+    std::wstring onaylananRizaSurumu; // Kullanıcının gizlilik rızası onayını verdiği andaki program sürümü (ProgramSurumu::Al() değeri); boşsa veya çalışan .exe'nin güncel sürümünden farklıysa, onay ekranı yeniden gösterilir ve onaylanana kadar program kullanılamaz
     bool yerImiCubuguGoster = true; // Toolbar'ın altında, en üst seviye yer imlerini gösteren ince çubuğun görünüp görünmeyeceği
     int sifreKasasiKilitlenmeDakikasi = 5; // Bir şifre Windows kimlik doğrulamasıyla gösterildikten/doldurulduktan sonra, kaç dakika boyunca tekrar sorulmayacağı, 0 ise her zaman (hiç hatırlamadan) sorulur
     std::wstring yeniSekmeArkaPlanYolu; // Kullanıcının hızlı erişim sayfası için seçtiği özel arka plan görselinin diskteki tam yolu, boşsa varsayılan desenli arka plan kullanılır

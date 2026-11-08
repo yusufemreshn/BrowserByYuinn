@@ -1,5 +1,5 @@
 <!-- Bu dosya, programın kullanıcı tarafından ilk kez açıldığında gösterilen, sade bir karşılama ekranının iskeletini oluşturur. -->
-<!-- Bu sayfa, kullanıcı seçimlerini tamamladığında veya "Atla" dediğinde bir daha asla gösterilmez, native taraf bunu settings.json içindeki ilkAcilisTamamlandiMi alanıyla hatırlar. -->
+<!-- Bu sayfa, kullanıcı zorunlu rıza onayı kutucuğunu işaretleyip "Başla"ya bastığında kapanır, native taraf bunu settings.json içindeki onaylananRizaSurumu alanıyla (hangi program sürümü için onay verildiği) hatırlar; program güncellenip sürüm değiştiğinde bu sayfa yeniden gösterilir ve onaylanana kadar hiçbir sekme/navigasyon kullanılamaz. -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -32,9 +32,22 @@
             <button id="buton-varsayilan-tarayici" class="ikincil-buton">Windows Ayarlarını Aç</button>
         </div>
 
+        <div class="soru soru-riza"> <!-- Zorunlu rıza onayı bloğu: checkbox işaretlenmeden "Başla" butonu aktif olmaz -->
+            <label class="riza-kutusu">
+                <input type="checkbox" id="riza-onay-kutusu" />
+                <span>Bu tarayıcının şifre kasası, otomatik doldurma, geçmiş ve yer imleri gibi kişisel verileri yalnızca bu cihazda, yerel olarak sakladığını okudum ve onaylıyorum.</span>
+            </label>
+            <p class="aciklama" style="margin:8px 0 0 0;">Sızıntı kontrolü özelliği hariç (isteğe bağlı, varsayılan kapalı) hiçbir kişisel veri ağa gönderilmez. Detaylar için <a id="riza-detay-link">gizlilik bildirimini</a> okuyabilirsiniz.</p>
+            <div id="riza-detay-metin" class="gizli" aria-hidden="true">
+                <strong>Veri Kullanımı ve Sorumluluk Bildirimi</strong><br />
+                Bu tarayıcı, şifrelerinizi, otomatik doldurma bilgilerinizi, tarama geçmişinizi ve yer imlerinizi yalnızca bu cihazda, yerel olarak saklar; bu veriler geliştiriciye veya üçüncü bir tarafa aktarılmaz. İstisna: "Sızıntı Kontrolü" özelliğini kendiniz açarsanız, şifrenizin kendisi değil, SHA-1 özetinin ilk 5 karakteri Have I Been Pwned servisine gönderilir; bu özellik varsayılan olarak kapalıdır. "Güvenli Gezinme" uyarısı tamamen yerel çalışır, ağa veri göndermez.<br /><br />
+                Bu onayı vererek, verilerinizin yukarıda açıklanan şekilde yerel olarak işlendiğini anladığınızı ve kabul ettiğinizi beyan edersiniz. Bu bildirim, Türkiye'de 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamındaki aydınlatma yükümlülüğünü; Avrupa Birliği ve diğer ülkelerde ise Genel Veri Koruma Tüzüğü (GDPR) ve ilgili yerel veri koruma mevzuatı kapsamındaki bilgilendirme yükümlülüğünü karşılamak amacıyla sunulmuştur.<br /><br />
+                Yazılım "olduğu gibi" (as-is) sunulur; geliştirici, cihazınızda saklanan verilerin kaybı, yetkisiz erişimi veya cihazınızın güvenliğinin ihlali gibi, yazılımın yerel depolama mekanizmasının ötesindeki nedenlerden (örn. cihaz çalınması, kötü amaçlı yazılım, işletim sistemi güvenlik açığı, kullanıcı hatası) doğan zararlardan sorumlu tutulamaz. Verilerinizin güvenliğini sağlamak (cihaz şifreleme, Windows oturum şifresi vb.) kullanıcının sorumluluğundadır. KVKK ve GDPR kapsamındaki haklarınız (verilere erişim, silme, düzeltme) için: tüm verileriniz zaten yalnızca bu cihazda tutulduğundan, Ayarlar &gt; Gizlilik ve Güvenlik bölümünden dilediğiniz an tamamen silebilirsiniz.
+            </div>
+        </div>
+
         <div class="eylemler">
-            <button id="buton-atla" class="ikincil-buton">Atla</button>
-            <button id="buton-basla" class="birincil-buton">Başla</button>
+            <button id="buton-basla" class="birincil-buton" disabled>Başla</button>
         </div>
     </div>
     <script src="onboarding.js"></script> <!-- Karşılama ekranının davranışını yöneten JavaScript dosyası eklenir -->

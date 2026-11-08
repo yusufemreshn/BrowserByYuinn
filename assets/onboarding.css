@@ -110,3 +110,47 @@ h1 {
 }
 .birincil-buton:hover, .ikincil-buton:hover { filter: brightness(1.12); }
 .birincil-buton:active, .ikincil-buton:active { transform: scale(0.96); }
+.birincil-buton:disabled {
+    opacity: 0.45; /* Rıza kutusu işaretlenmeden "Başla" butonu soluk görünür, henüz tıklanamayacağı belli olur */
+    cursor: not-allowed; /* Fare üzerine geldiğinde yasak işaretçisi gösterilir */
+    filter: none; /* Devre dışıyken hover aydınlanma efekti uygulanmaz */
+}
+
+.soru-riza {
+    background-color: var(--zemin-2); /* Rıza bloğu, diğer sorulardan ayrışması için hafif farklı bir zemin rengiyle vurgulanır */
+    border: 1px solid var(--zemin-4); /* İnce bir kenarlık */
+    border-radius: var(--radius); /* Köşeler, genel köşe yuvarlaklığına göre yuvarlanır */
+    padding: 14px; /* İç boşluk */
+}
+.riza-kutusu {
+    display: flex; /* Kutucuk ve metin yan yana dizilir */
+    align-items: flex-start;
+    gap: 10px; /* Kutucuk ile metin arasına boşluk eklenir */
+    cursor: pointer; /* Fare üzerine geldiğinde el işaretçisi gösterilir, metne tıklamak da kutuyu işaretler */
+    font-size: 13px; /* Rıza metninin yazı boyutu */
+}
+.riza-kutusu input[type="checkbox"] {
+    margin-top: 2px; /* Kutucuk, ilk metin satırıyla hizalanır */
+    width: 16px; height: 16px; /* Kutucuğun boyutu */
+    accent-color: var(--vurgu-rengi); /* İşaretli haldeki rengi, kullanıcının seçtiği vurgu rengiyle uyumlu olur */
+    cursor: pointer;
+    flex-shrink: 0; /* Metin uzun olsa da kutucuk küçülmez */
+}
+#riza-detay-link {
+    color: var(--vurgu-rengi); /* Detay bağlantısı, vurgu rengiyle öne çıkar */
+    cursor: pointer;
+    text-decoration: underline;
+}
+#riza-detay-metin {
+    margin-top: 10px; /* Üstündeki açıklamadan ayrılması için boşluk bırakılır */
+    padding-top: 10px; /* İç boşluk */
+    border-top: 1px solid var(--zemin-4); /* Üstündeki içerikten ince bir çizgiyle ayrılır */
+    font-size: 11.5px; /* Hukuki metin, diğer metinlerden biraz daha küçük gösterilir */
+    color: var(--metin-soluk); /* Soluk ton, bunun arka plan bilgisi olduğunu hissettirir */
+    line-height: 1.5; /* Satır araları, uzun metnin okunabilirliğini artırır */
+    max-height: 160px; /* Metin kartın boyunu aşırı uzatmasın diye belirli bir yükseklikte sınırlanır */
+    overflow-y: auto; /* Sınırın üzerindeki içerik, dikey kaydırma ile okunabilir */
+}
+#riza-detay-metin.gizli {
+    display: none; /* Detay metni, kullanıcı bağlantıya tıklamadan gizli kalır */
+}

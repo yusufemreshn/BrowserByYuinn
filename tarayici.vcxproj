@@ -128,6 +128,8 @@
     <ClInclude Include="src\VeriYolu.h" />
     <ClCompile Include="src\Settings.cpp" />
     <ClInclude Include="src\Settings.h" />
+    <ClCompile Include="src\ProgramSurumu.cpp" />
+    <ClInclude Include="src\ProgramSurumu.h" />
     <ClInclude Include="src\Base64Yardimci.h" />
     <ClCompile Include="src\PasswordVault.cpp" />
     <ClInclude Include="src\PasswordVault.h" />

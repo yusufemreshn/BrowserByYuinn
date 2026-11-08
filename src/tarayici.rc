@@ -1,4 +1,29 @@
-// Bu dosya, derlenen programa gömülecek kaynakları tanımlar, şu an için sadece programın simgesini (.ico) içerir
+// Bu dosya, derlenen programa gömülecek kaynakları tanımlar: programın simgesini (.ico) ve sürüm bilgisini (VERSIONINFO) içerir
 #include "resource.h"
 
 IDI_APPICON ICON "app.ico"
+
+// Bu blok, programın sürüm numarasını doğrudan .exe'nin kendi ikili dosyasına gömer, böylece sürüm bilgisi settings.json gibi kullanıcının elle değiştirebileceği bir yerden değil, çalışan .exe'den okunur
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,4,0,0
+ PRODUCTVERSION 0,4,0,0
+ FILEFLAGSMASK 0x3fL
+ FILEFLAGS 0x0L
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041f04b0" // Bu alt blok, Türkçe dil (0x041f) ve Unicode karakter kodlaması (04b0) için sürüm metinlerini tutar
+        BEGIN
+            VALUE "ProductVersion", "0.4.0\0"
+            VALUE "FileVersion", "0.4.0\0"
+            VALUE "ProductName", "Tarayıcı\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x041f, 0x04B0 // Bu değer, yukarıdaki StringFileInfo alt bloğunun hangi dil/kodlama kombinasyonuna ait olduğunu Windows'a bildirir
+    END
+END

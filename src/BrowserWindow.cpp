@@ -7,6 +7,7 @@
 #include "Storage.h" // Geçmişe kayıt ekleme ve yer imi işlemleri için eklenir
 #include "Logger.h" // Hata kodlarını günlüğe kaydetme, kodun açıklamasını bulma ve günlüğü okuma için eklenir
 #include "Settings.h" // Kullanıcının arama motoru, ana sayfa ve tema ayarlarını okuyup yazmak için eklenir
+#include "ProgramSurumu.h" // Çalışan .exe'nin kendi gömülü sürümünü okuyup, kullanıcının rıza onayı verdiği sürümle karşılaştırmak için eklenir
 #include "PasswordVault.h" // Kayıtlı şifreleri eklemek, silmek, listelemek ve çözmek için eklenir
 #include "AutofillVault.h" // Kişisel bilgi profilini ve kayıtlı kartları eklemek, silmek, listelemek ve çözmek için eklenir
 #include "UserScriptVault.h" // Kullanıcının kendi eklediği küçük JavaScript betiklerini (userscript) eklemek, silmek, listelemek için eklenir
@@ -448,7 +449,8 @@ void BrowserWindow::WebView2OrtamiBaslat()
                 // Kullanıcı daha önce karşılama ekranını hiç görmediyse, programın ilk sekmesi hızlı erişim sayfası yerine karşılama ekranı olur, bu ekran tamamlanınca bir daha asla gösterilmez
                 EngellemeAyarlariniYenile(); // Reklam/izleyici engelleme ayarları, ilk sekme açılmadan önce önbelleğe alınır, böylece ilk sekmenin istekleri de doğru şekilde filtrelenir
                 AyarVerisi baslangicAyarlari = Ayarlar::Oku();
-                bool karsilamaGosterilsinMi = !baslangicAyarlari.ilkAcilisTamamlandiMi; // Daha önce tamamlanmadıysa, karşılama ekranı gösterilecektir
+                m_rizaOnayiBekleniyor = (baslangicAyarlari.onaylananRizaSurumu != ProgramSurumu::Al()); // Kullanıcı, çalışan .exe'nin güncel sürümü için henüz rıza onayı vermediyse (ilk kurulumda alan boş olduğu için otomatik eşitsizdir), karşılama ekranı gösterilecek ve program kullanılamayacaktır
+                bool karsilamaGosterilsinMi = m_rizaOnayiBekleniyor; // Daha önce tamamlanmadıysa, karşılama ekranı gösterilecektir
                 std::vector<SayfaKaydi> onceki_oturum = (!karsilamaGosterilsinMi && baslangicAyarlari.sonOturumuGeriYukle) ? Depolama::OturumuOku() : std::vector<SayfaKaydi>(); // Karşılama ekranı gösterilmeyecekse ve kullanıcı bu özelliği açtıysa, önceki oturumun sekmeleri okunur
 
                 if (!onceki_oturum.empty()) // Geri yüklenecek, en az bir sekme içeren bir önceki oturum varsa
@@ -461,7 +463,8 @@ void BrowserWindow::WebView2OrtamiBaslat()
                 else // Geri yüklenecek bir oturum yoksa (veya özellik kapalıysa), her zamanki gibi tek bir başlangıç sekmesi açılır
                 {
                     std::wstring baslangicAdresi = karsilamaGosterilsinMi ? L"https://tarayici.local/onboarding.html" : L"https://tarayici.local/newtab.html"; // Duruma göre doğru dahili sayfa seçilir
-                    YeniSekmeOlustur(baslangicAdresi, true, true); // Program ilk açıldığında, bu dahili sayfayla bir ilk sekme açılır ve aktif yapılır
+                    int acilanSekmeId = YeniSekmeOlustur(baslangicAdresi, true, true); // Program ilk açıldığında, bu dahili sayfayla bir ilk sekme açılır ve aktif yapılır
+                    if (karsilamaGosterilsinMi) { m_onboardingSekmeId = acilanSekmeId; } // Rıza onayı bekleniyorsa, bu sekmenin kimliği hatırlanır: kapatılamayacak ve diğer tüm sekme/navigasyon denemeleri buraya yönlendirilecektir
                 }
                 YedekSekmeHazirla(); // Kullanıcı daha hiç "+" butonuna basmadan, bir sonraki sekme için arka planda şimdiden bir yedek denetleyici hazırlanmaya başlanır
                 return S_OK; // İşlemin başarıyla ele alındığı bildirilir
@@ -898,6 +901,13 @@ void BrowserWindow::OneriWebViewOlustur()
 // Bu fonksiyon, verilen adreste yeni bir sekme açar, yeni sekmenin kimlik numarasını hemen döndürür
 int BrowserWindow::YeniSekmeOlustur(const std::wstring& baslangicAdresi, bool aktifYap, bool dahiliMi, bool gizliMi)
 {
+    if (m_rizaOnayiBekleniyor && baslangicAdresi != L"https://tarayici.local/onboarding.html") // Rıza onayı verilmeden, karşılama sekmesi dışında hiçbir sekme açılamaz
+    {
+        m_secimSekmeId = m_onboardingSekmeId; // Yeni sekme açılmaz, kullanıcı mevcut karşılama sekmesine geri döndürülür
+        SekmeListesiniGonder();
+        return m_onboardingSekmeId;
+    }
+
     int yeniId = m_sonrakiSekmeId; // Bu yeni sekmeye verilecek kimlik numarası, bir sonraki kullanılabilir numara olarak belirlenir
     m_sonrakiSekmeId++; // Bir sonraki sekme için kullanılacak numara bir artırılır
 
@@ -1418,6 +1428,8 @@ void BrowserWindow::SekmeyeGec(int sekmeId)
 // Bu fonksiyon, verilen kimlik numarasına sahip sekmeyi kapatır
 void BrowserWindow::SekmeKapat(int sekmeId)
 {
+    if (m_rizaOnayiBekleniyor && sekmeId == m_onboardingSekmeId) { return; } // Rıza onayı verilmeden karşılama sekmesi kapatılamaz
+
     bool kapatilanAktifti = (sekmeId == m_aktifSekmeId); // Kapatılan sekmenin, kapatılmadan önce ekranda GÖRÜNEN aktif sekme olup olmadığı not edilir
     bool kapatilanSeciliydi = (sekmeId == m_secimSekmeId); // Kapatılan sekmenin, denetleyicisi henüz hazır olmasa bile şeritte SEÇİLİ sekme olup olmadığı not edilir
 
@@ -1860,6 +1872,13 @@ void BrowserWindow::SekmeOlaylariniBagla(int sekmeId)
                 argumanlar->get_Uri(&hedefAdresPtr); // Gidilen adres okunur
                 std::wstring hedefAdres = hedefAdresPtr ? hedefAdresPtr : L""; // Adres, güvenli bir metin değişkenine aktarılır
                 if (hedefAdresPtr != nullptr) { CoTaskMemFree(hedefAdresPtr); } // Ayrılan bellek serbest bırakılır
+
+                if (m_rizaOnayiBekleniyor && hedefAdres != L"https://tarayici.local/onboarding.html") // Rıza onayı verilmeden, karşılama sayfası dışında hiçbir adrese gidilemez
+                {
+                    argumanlar->put_Cancel(TRUE); // İstenen gezinme iptal edilir
+                    if (gonderen != nullptr) { gonderen->Navigate(L"https://tarayici.local/onboarding.html"); } // Kullanıcı, karşılama ekranına geri yönlendirilir
+                    return S_OK;
+                }
 
                 // HTTPS zorunlu kılma: düz "http://" ile başlayan adresler, güvenli "https://" sürümüne yükseltilir
                 // "localhost" ve "127.0.0.1" bilinçli olarak hariç tutulur, çünkü yerel geliştirme sunucularının genelde geçerli bir SSL sertifikası olmaz, onları da yükseltmek yerel geliştirme yapan kullanıcıları kırardı
@@ -2801,15 +2820,24 @@ void BrowserWindow::DahiliSayfaMesajiIsle(int sekmeId, const std::wstring& mesaj
         std::wstring secilenMotor = JsonAlaniBul(veriJson, L"searchEngine"); // Kullanıcının seçtiği arama motoru okunur
         if (!secilenMotor.empty()) { ayarlar.aramaMotoru = secilenMotor; } // Boş değilse ayarlara uygulanır
 
-        ayarlar.ilkAcilisTamamlandiMi = true; // Karşılama ekranı artık tamamlandığı için, program bir daha asla göstermeyecek şekilde işaretlenir
-        Ayarlar::Kaydet(ayarlar); // Güncellenmiş ayarlar diske kaydedilir
+        std::wstring rizaMetni = JsonAlaniBul(veriJson, L"consent"); // Kullanıcının rıza kutusunu işaretleyip işaretlemediği, diğer tüm bool alanlarla aynı biçimde "evet"/"hayir" metni olarak okunur
+        bool rizaVerildiMi = (rizaMetni == L"evet"); // Arayüz zaten checkbox işaretlenmeden bu mesajı göndermiyor, ama native taraf burada ikinci bir güvence olarak kontrol eder
 
-        TemayiToolbaraGonder(); // Seçilen vurgu rengi, toolbar arayüzüne anında yansıtılır
-
-        SekmeBilgisi* sekme = SekmeBul(sekmeId); // Karşılama ekranını gösteren sekmenin bilgilerine erişilir
-        if (sekme != nullptr) // Eğer sekme hâlâ açıksa
+        if (rizaVerildiMi) // Rıza onayı verilmişse, program kullanılabilir hale getirilir; verilmemişse hiçbir şey değişmez ve engelleme sürer
         {
-            sekme->webView->Navigate(L"https://tarayici.local/newtab.html"); // Bu sekme, artık normal hızlı erişim sayfasına yönlendirilir
+            ayarlar.ilkAcilisTamamlandiMi = true; // Karşılama ekranı artık tamamlandığı için, program bir daha asla göstermeyecek şekilde işaretlenir
+            ayarlar.onaylananRizaSurumu = ProgramSurumu::Al(); // Hangi program sürümü için rıza verildiği kaydedilir, bir sonraki güncellemede sürüm değiştiğinde bu alan artık eşleşmeyeceği için onay ekranı yeniden gösterilir
+            Ayarlar::Kaydet(ayarlar); // Güncellenmiş ayarlar diske kaydedilir
+
+            m_rizaOnayiBekleniyor = false; // Engelleme kaldırılır: artık yeni sekme açılabilir ve her adrese gidilebilir
+
+            TemayiToolbaraGonder(); // Seçilen vurgu rengi, toolbar arayüzüne anında yansıtılır
+
+            SekmeBilgisi* sekme = SekmeBul(sekmeId); // Karşılama ekranını gösteren sekmenin bilgilerine erişilir
+            if (sekme != nullptr) // Eğer sekme hâlâ açıksa
+            {
+                sekme->webView->Navigate(L"https://tarayici.local/newtab.html"); // Bu sekme, artık normal hızlı erişim sayfasına yönlendirilir
+            }
         }
     }
     else if (mesaj == L"get_history") // Geçmiş listesi isteniyorsa

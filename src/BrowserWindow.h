@@ -489,6 +489,8 @@ private:
     int m_sonrakiSekmeId = 1; // Bir sonraki oluşturulacak sekmeye verilecek kimlik numarası, her yeni sekmede bir artırılır
     int m_ayarlarSekmeId = -1; // Eğer bir Ayarlar sekmesi açıksa, onun kimlik numarası, hiç açık değilse eksi bir değerindedir
     int m_kisayollarSekmeId = -1; // Eğer bir klavye kısayolları sekmesi açıksa, onun kimlik numarası, hiç açık değilse eksi bir değerindedir
+    bool m_rizaOnayiBekleniyor = false; // Doğruysa, kullanıcı henüz güncel sürüm için gizlilik rızası onayı vermemiştir; bu durumda karşılama sekmesi dışında hiçbir sekme açılamaz ve hiçbir navigasyon yapılamaz
+    int m_onboardingSekmeId = -1; // Rıza onayı beklenirken gösterilen karşılama sekmesinin kimlik numarası, bu sekme kapatılamaz ve diğer sekmeler bu sekmeye yönlendirilir
 
     // Hamburger menü panelinin (ayrı denetleyicisinin) sabit genişliği ve azami yüksekliği, içindeki tüm öğelerin rahatça sığması için yeterli bir pay bırakılır
     static const int MenuPaneliGenisligi = 300;

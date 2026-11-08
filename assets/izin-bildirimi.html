@@ -8,8 +8,14 @@
     <link rel="stylesheet" href="chrome.css" /> <!-- .izin-sayfasi gibi bu panele özel stiller de chrome.css içinde tanımlıdır -->
 </head>
 <body class="izin-sayfasi">
-    <div id="izin-site-adi"></div> <!-- İzni isteyen sitenin alan adı, native taraftan gelen bilgiyle doldurulur -->
-    <p id="izin-aciklama"></p> <!-- "konumunuza erişmek istiyor" gibi, istenen izni açıklayan metin -->
+    <div id="izin-ust-satir">
+        <div id="izin-simge"></div> <!-- İstenen izin türüne uygun ikon (zil/konum/kamera/mikrofon/oynat), izin-bildirimi.js tarafından doldurulur -->
+        <div id="izin-metin-kutusu">
+            <div id="izin-site-adi"></div> <!-- İzni isteyen sitenin alan adı, native taraftan gelen bilgiyle doldurulur -->
+            <p id="izin-aciklama"></p> <!-- "konumunuza erişmek istiyor" gibi, istenen izni açıklayan metin -->
+        </div>
+    </div>
+    <div id="izin-ayirici"></div> <!-- Üstteki ikon/metin bloğu ile alttaki hatırla/buton bloğunu ayıran ince çizgi -->
     <label id="izin-hatirla-satiri"><input type="checkbox" id="izin-hatirla-kutusu" checked />Bu site için hatırla</label>
     <div id="izin-butonlari">
         <button id="izin-engelle-butonu">Engelle</button>

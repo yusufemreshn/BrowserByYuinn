@@ -435,7 +435,7 @@ private:
     Microsoft::WRL::ComPtr<ICoreWebView2Controller> m_oneriDenetleyici; // Öneri panelini gösteren ayrı denetleyici
     Microsoft::WRL::ComPtr<ICoreWebView2> m_oneriWebView; // Öneri panelinin kendi WebView2 nesnesi
     bool m_oneriPaneliAcikMi = false; // Öneri panelinin şu anda açık olup olmadığı
-    static const int OneriPaneliSatirYuksekligi = 42; // Her öneri satırının kapladığı GERÇEK yükseklik (CSS'teki iç boşluk + iki satırlık metin + alt çizgi ile birebir), bundan düşük bir değer panelin alt satırları kırpılmış/eksik görünmesine yol açar
+    static const int OneriPaneliSatirYuksekligi = 50; // Her öneri satırının kapladığı GERÇEK yükseklik (CSS'teki üst/alt margin + iç boşluk + iki satırlık metin ile birebir), bundan düşük bir değer panelin alt satırları kırpılmış/eksik görünmesine yol açar
     int m_oneriSecilenIndeks = -1; // Panelde klavye ile o an seçili olan satırın sırası (0'dan başlar), hiçbir satır seçili değilse (orijinal yazılan metin geçerliyse) -1
     std::vector<std::wstring> m_oneriSeciliAdresler; // Panelde o an gösterilen (hesap sonucu satırı hariç) her satırın adresi, klavyeyle onaylama bu listeden adres bulur
 
@@ -500,7 +500,7 @@ private:
     ULONGLONG m_menuSonKapanmaZamani = 0;
 
     static const int IzinPaneliGenisligi = 360; // İzin bildirim panelinin sabit genişliği
-    static const int IzinPaneliYuksekligi = 150; // İzin bildirim panelinin sabit yüksekliği, içindeki metin/butonlar için yeterli pay bırakır
+    static const int IzinPaneliYuksekligi = 158; // İzin bildirim panelinin sabit yüksekliği, ikon rozeti + metin/butonlar için yeterli pay bırakır
 
     static const int SitePaneliGenisligi = 300; // Kilit ikonu panelinin sabit genişliği
     static const int SitePaneliYuksekligi = 320; // Kilit ikonu panelinin azami yüksekliği, içindeki izin listesi uzunsa panel kendi içinde kaydırılır
@@ -547,7 +547,7 @@ private:
 
     ULONGLONG m_baslangicZamani = 0; // Programın açıldığı an, GetTickCount64() değeri olarak tutulur, Ayarlar sayfasındaki Hakkında bölümünde çalışma süresini göstermek için kullanılır
 
-    static const int ToolbarYuksekligi = 96; // Pencerenin üstünde toolbar arayüzüne (sekme şeridi ve navigasyon çubuğu) ayrılan sabit piksel yüksekliği
+    static const int ToolbarYuksekligi = 88; // Pencerenin üstünde toolbar arayüzüne (sekme şeridi ve navigasyon çubuğu) ayrılan sabit piksel yüksekliği, chrome.css'teki #sekme-seridi(40) + #toolbar margin-top(4) + #toolbar(44) toplamıyla birebir eşleşmeli, yoksa fark kadar alt kısım (yer imi çubuğu/sekme metni) kırpılır
     static const int YerImiCubuguYuksekligi = 28; // Yer imi çubuğu açıksa, toolbar'ın altına eklenen ekstra piksel yüksekliği
 
     // Bu fonksiyon, güncel ayarlara göre (yer imi çubuğu açık mı) toolbar'ın gerçekten kapladığı TOPLAM yüksekliği hesaplar, içerik alanının ve tüm panellerin Y konumu bu değere göre hesaplanır

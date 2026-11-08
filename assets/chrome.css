@@ -269,7 +269,7 @@ body.yogunluk-kompakt #toolbar { height: 48px; } /* Kompakt yoğunlukta, navigas
 #toolbar {
     display: flex; /* Toolbar içindeki butonların ve adres çubuğunun yan yana dizilmesi için esnek kutu düzeni kullanılır */
     align-items: center; /* Tüm öğelerin dikey olarak ortalanması sağlanır */
-    height: 56px; /* Toolbar'ın yüksekliği */
+    height: 44px; /* Toolbar'ın yüksekliği, yer imi çubuğuyla arasındaki boşluğu azaltmak için küçültüldü */
     padding: 0 10px; /* Toolbar'ın sol ve sağ kenarlarına küçük bir iç boşluk eklenir */
     gap: 6px; /* Toolbar içindeki öğeler arasına küçük bir boşluk eklenir */
     margin-top: 4px; /* Sekme şeridiyle toolbar arasında, şerit zemininin göründüğü ince bir boşluk bırakılır */
@@ -569,67 +569,100 @@ body.menu-sayfasi > *:nth-child(n+9) { --menu-sira: 9; } /* 9. öğeden sonrası
 /* Bu panelin boyutu de native tarafta (BrowserWindow.cpp, IzinPaneliGenisligi/IzinPaneliYuksekligi) zaten panelin kendi gerçek boyutu kadar ayarlandığı için, burada sadece panelin KENDİ sayfasının iç düzeni belirlenir */
 body.izin-sayfasi {
     display: flex; /* Öğelerin dikey sıralanması için */
-    flex-direction: column; /* Site adı, açıklama, hatırla kutusu ve butonlar yukarıdan aşağıya dizilir */
+    flex-direction: column; /* İkon/metin bloğu, ayırıcı, hatırla kutusu ve butonlar yukarıdan aşağıya dizilir */
     height: 100vh; /* Panel, kendisi için ayrılan native pencereyi tam doldurur */
     box-sizing: border-box; /* İç boşluk, yüksekliğin dışına taşmaz */
-    padding: 16px; /* Panelin iç kenar boşluğu */
+    padding: 14px 14px 12px; /* Panelin iç kenar boşluğu, üst/yan ile alt arasında hafif fark bırakılır */
     gap: 10px; /* Öğeler arasına boşluk eklenir */
     background-color: var(--zemin-2); /* Panelin arka plan rengi, menü paneliyle tutarlı */
     animation: panel-acilis 160ms var(--gecis-yumusak) backwards; /* Menü paneliyle aynı giriş hissi */
 }
+#izin-ust-satir {
+    display: flex; /* İkon rozeti ile site adı/açıklama metninin yan yana durması için */
+    gap: 11px; /* İkon ile metin arasına boşluk eklenir */
+    align-items: flex-start; /* İkon, metin bloğunun üst kenarıyla hizalanır */
+}
+#izin-simge {
+    flex: 0 0 auto; /* İkon rozeti, metin ne kadar uzasa da sabit boyutunu korur */
+    width: 30px; height: 30px; /* Rozetin sabit boyutu */
+    border-radius: 9px; /* Rozetin köşeleri yuvarlatılır */
+    background-color: var(--zemin-3); /* Rozet, panel zemininden hafifçe ayrışan bir ton kullanır */
+    color: var(--metin-soluk); /* İkon çizgisinin rengi */
+    display: flex; align-items: center; justify-content: center; /* İçindeki SVG ikon, rozetin ortasına hizalanır */
+}
+#izin-simge svg {
+    width: 16px; height: 16px; /* İkon çiziminin boyutu */
+}
+#izin-metin-kutusu {
+    display: flex; /* Site adı ile açıklamanın dikey sıralanması için */
+    flex-direction: column; /* Site adı üstte, açıklama altta durur */
+    gap: 2px; /* İkisi arasına küçük bir boşluk eklenir, tek bir cümle hissi versin diye fazla aralık bırakılmaz */
+    min-width: 0; /* Metin kutusu, uzun alan adlarında taşmadan daralabilir */
+}
 #izin-site-adi {
     font-weight: 600; /* Site adı, panelin en belirgin öğesi olduğu için kalın gösterilir */
-    font-size: 14px; /* Site adının yazı boyutu */
+    font-size: 13.5px; /* Site adının yazı boyutu */
     color: var(--metin); /* Site adının rengi */
+    line-height: 1.3; /* Satır yüksekliği, ikon ile dikey hizayı korur */
     word-break: break-all; /* Çok uzun alan adları, panelin dışına taşmadan satır içinde kırılır */
 }
 #izin-aciklama {
     margin: 0; /* Varsayılan paragraf boşluğu kaldırılır, gap zaten yeterli boşluğu sağlıyor */
-    font-size: 13px; /* Açıklama metninin yazı boyutu */
+    font-size: 12.5px; /* Açıklama metninin yazı boyutu */
     color: var(--metin-soluk); /* Açıklama, site adından daha soluk gösterilir */
-    line-height: 1.5; /* Satır yüksekliği, iki satıra taşan açıklamaların rahat okunmasını sağlar */
+    line-height: 1.4; /* Satır yüksekliği, iki satıra taşan açıklamaların rahat okunmasını sağlar */
+}
+#izin-ayirici {
+    height: 1px; /* İnce bir çizgi */
+    margin: 0 -14px; /* Panelin kendi iç boşluğunu telafi eder, çizgi panelin tam kenarından kenarına uzanır */
+    background-color: var(--zemin-4); /* Çizginin rengi, diğer kenarlıklarla tutarlı */
+    opacity: 0.55; /* Çizgi, sert bir ayraç yerine hafif bir bölümleme hissi versin diye soluklaştırılır */
 }
 #izin-hatirla-satiri {
     display: flex; /* Onay kutusu ile metnin yan yana durması için */
     align-items: center; /* Öğeler dikeyde ortalanır */
-    gap: 8px; /* Kutu ile metin arasına boşluk eklenir */
+    gap: 7px; /* Kutu ile metin arasına boşluk eklenir */
     margin-top: auto; /* Bu satır, panelin alt kısmına (butonların hemen üstüne) itilir */
-    font-size: 12.5px; /* Hatırla metninin yazı boyutu */
+    font-size: 12px; /* Hatırla metninin yazı boyutu */
     color: var(--metin-soluk); /* Hatırla metninin rengi */
     cursor: pointer; /* Fare satırın üzerine geldiğinde el işaretçisi gösterilir */
 }
 #izin-hatirla-kutusu {
     width: 14px; height: 14px; /* Onay kutusunun boyutu */
+    margin: 0; /* Varsayılan dış boşluk kaldırılır, hizanın gap ile kontrol edilmesi için */
     accent-color: var(--vurgu-rengi); /* İşaretlendiğinde, kullanıcının seçtiği vurgu rengini kullanır */
     cursor: pointer; /* Fare kutunun üzerine geldiğinde el işaretçisi gösterilir */
 }
 #izin-butonlari {
     display: flex; /* İki butonun yan yana durması için */
     gap: 8px; /* Butonlar arasına boşluk eklenir */
+    justify-content: flex-end; /* Butonlar, tam genişliği germek yerine sağa hizalanır, native dialog hissi verir */
 }
 #izin-butonlari button {
-    flex: 1; /* İki buton, mevcut genişliği eşit paylaşır */
-    padding: 8px 12px; /* Butonların iç boşluğu */
-    border: none; /* Varsayılan kenarlık kaldırılır */
-    border-radius: 8px; /* Köşeler yuvarlatılır */
-    font-size: 13px; /* Buton yazısının boyutu */
+    padding: 7px 14px; /* Butonların iç boşluğu, artık tam genişliği germedikleri için içerik kadar daralır */
+    border-radius: 7px; /* Köşeler yuvarlatılır */
+    font-size: 12.5px; /* Buton yazısının boyutu */
+    font-weight: 600; /* Buton yazısı, panelin diğer metinlerinden biraz daha belirgin dursun diye kalınlaştırılır */
     font-family: inherit; /* Genel yazı tipini miras alır */
     cursor: pointer; /* Fare butonun üzerine geldiğinde el işaretçisi gösterilir */
-    transition: filter 120ms ease, background-color 120ms ease; /* Hover durumu yumuşak geçişle olur */
+    transition: filter 120ms ease, background-color 120ms ease, color 120ms ease, border-color 120ms ease; /* Hover durumu yumuşak geçişle olur */
 }
 #izin-engelle-butonu {
-    background-color: var(--zemin-3); /* "Engelle" butonu, nötr bir zemin rengiyle gösterilir */
-    color: var(--metin); /* Buton yazısının rengi */
+    background-color: transparent; /* "Engelle" ikincil bir eylem olduğu için dolgu renk yerine şeffaf tutulur, dikkat "İzin Ver"de kalır */
+    border: 1px solid var(--zemin-4); /* Şeffaf buton, ince bir kenarlıkla panelden ayrıştırılır */
+    color: var(--metin-soluk); /* Buton yazısının rengi */
 }
 #izin-engelle-butonu:hover {
-    background-color: var(--zemin-4); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+    background-color: var(--zemin-3); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
+    color: var(--metin); /* Hover'da yazı da biraz belirginleşir */
 }
 #izin-izin-ver-butonu {
-    background-color: var(--vurgu-rengi); /* "İzin Ver" butonu, kullanıcının seçtiği vurgu rengiyle doldurulur */
+    background-color: var(--vurgu-rengi); /* "İzin Ver" butonu, panelin tek dolgu rengi olduğu için tek başına göz dolduruyor */
+    border: 1px solid transparent; /* Engelle butonuyla aynı kutu modelini korumak için görünmez bir kenarlık eklenir */
     color: #ffffff; /* Buton yazısı beyaz olarak ayarlanır */
 }
 #izin-izin-ver-butonu:hover {
-    filter: brightness(1.1); /* Fare üzerine geldiğinde buton hafifçe parlar */
+    filter: brightness(1.08); /* Fare üzerine geldiğinde buton hafifçe parlar */
 }
 
 /* --- Site bilgisi/izinleri paneli (kilit ikonuna tıklanınca açılır) --- */
@@ -804,8 +837,10 @@ body.sertifika-sayfasi {
 .yerimi-ogesi {
     display: flex; /* Favicon ile başlığın yan yana durması için */
     align-items: center; /* Öğeler dikeyde ortalanır */
+    line-height: normal; /* yerimi-cubugu'ndan miras kalan satır yüksekliği metni alta yapıştırmasın diye sıfırlanır */
     gap: 5px; /* Favicon ile başlık arasına boşluk eklenir */
-    padding: 4px 8px; /* Öğenin iç boşluğu */
+    padding: 2px 8px; /* Öğenin iç boşluğu */
+    align-self: flex-start; margin-top: 2px; /* Öğe, ortalanmak yerine çubuğun üstüne sabitlenir, böylece altta boşluk kalır ve çubuğa yapışmaz */
     border-radius: 6px; /* Köşeler yuvarlatılır */
     font-size: 12px; /* Yazı boyutu */
     color: var(--metin-soluk); /* Varsayılan olarak soluk bir renk kullanılır */
@@ -821,10 +856,13 @@ body.sertifika-sayfasi {
     color: var(--metin); /* Yazı rengi de daha belirgin bir tona döner */
 }
 .yerimi-favicon {
-    width: 12px; height: 12px; /* Favicon yer tutucusunun boyutu */
+    width: 18px; height: 18px; /* Favicon yer tutucusunun boyutu, 1.5 katına çıkarıldı */
     border-radius: 3px; /* Köşeleri hafifçe yuvarlatılır */
     flex-shrink: 0; /* Çubuk daraldığında favicon'un küçülmesi engellenir */
-    background: linear-gradient(135deg, var(--vurgu-rengi), color-mix(in srgb, var(--vurgu-rengi) 55%, transparent)); /* Gerçek bir site simgesi yokken, vurgu renginden türetilen basit bir yer tutucu gösterilir */
+    object-fit: contain; /* Gerçek site ikonu, oranı bozulmadan 12x12 kutuya sığdırılır */
+}
+.yerimi-favicon-yertutucu {
+    background: linear-gradient(135deg, var(--vurgu-rengi), color-mix(in srgb, var(--vurgu-rengi) 55%, transparent)); /* Gerçek site ikonu hiç bulunamazsa, vurgu renginden türetilen basit bir yer tutucu gösterilir */
 }
 .yerimi-klasor {
     position: relative; /* Açılır menünün buna göre konumlanması için */
@@ -832,7 +870,7 @@ body.sertifika-sayfasi {
 .yerimi-klasor-menu {
     position: absolute; /* Klasör öğesinin tam altında, sayfa akışının dışında konumlanır */
     top: 100%; left: 0; /* Klasör öğesinin sol alt köşesinden başlar */
-    margin-top: 2px; /* Küçük bir boşlukla ayrılır */
+    margin-top: -2px; /* Öğenin alt iç boşluğu arttığı için kutu biraz yukarı çekilir */
     background-color: var(--zemin-2); /* Diğer panellerle tutarlı bir zemin rengi */
     border-radius: 8px; /* Köşeler yuvarlatılır */
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); /* Çubuğun üzerinde belirdiğini hissettiren bir gölge */
@@ -862,32 +900,45 @@ body.sertifika-sayfasi {
 /* --- Adres çubuğu öneri paneli --- */
 body.oneri-sayfasi {
     background-color: var(--zemin-2); /* Panelin arka plan rengi, diğer panellerle tutarlı */
-    overflow-y: auto; /* Öneri sayısı panelin yüksekliğini aşarsa, kendi içinde kaydırılır */
-    animation: dropdown-acilis 110ms ease backwards; /* Adres çubuğu yazıldıkça sık sık yeniden açıldığı için, panel giriş animasyonundan daha kısa ve sade bir belirme kullanılır */
+    overflow: hidden; /* En fazla altı satır gösterilir (native taraf zaten bu kadarını gönderir), fazlası kaydırma çubuğuyla değil, sessizce kırpılarak gizlenir */
+    border: 1px solid var(--zemin-4); /* Pencere gerçek köşeleri yuvarlatıldığı için (bkz. native taraf SetWindowRgn), zemin-2 ile aynı tonda kaybolmaması adına ince bir kenarlık eklenir */
+    border-radius: 10px; /* Native taraftaki pencere kırpması ile aynı yarıçap, çizim de köşelere kadar yuvarlak olsun diye */
+    box-sizing: border-box;
+    animation: dropdown-acilis 120ms cubic-bezier(0.16, 1, 0.3, 1) backwards; /* Adres çubuğu yazıldıkça sık sık yeniden açıldığı için, panel giriş animasyonundan daha kısa ve sade bir belirme kullanılır */
 }
 @keyframes dropdown-acilis {
-    from { opacity: 0; transform: translateY(-3px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .oneri-satiri, .doldurma-oneri-satiri {
-    animation: dropdown-acilis 110ms ease backwards;
+    animation: dropdown-acilis 120ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .oneri-satiri {
-    padding: 6px 12px; /* Satırın iç boşluğu */
+    display: flex; /* İkon ve metin yan yana, dikeyde ortalanmış dizilsin diye */
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px; /* Satırın iç boşluğu */
+    margin: 3px; /* Satırlar panel kenarına yapışık değil, kendi aralarında hafif boşluklu, ayrı birer "çip" gibi görünür */
+    border-radius: 7px; /* Köşeli çizgilerle ayrılan eski liste görünümü yerine, her satır kendi başına yuvarlak köşeli bir öğe olur */
     cursor: pointer; /* Tıklanabilir olduğu için el işaretçisi gösterilir */
-    border-bottom: 1px solid var(--zemin-3); /* Satırlar birbirinden ince bir çizgiyle ayrılır */
     overflow: hidden; /* Taşan metin gizlenir */
-}
-.oneri-satiri:last-child {
-    border-bottom: none; /* Son satırın altında gereksiz bir çizgi kalmaz */
+    transition: background-color 90ms ease; /* Fare ile gezinirken vurgu aniden değil, yumuşak geçişle değişir */
 }
 .oneri-satiri:hover {
     background-color: var(--zemin-3); /* Fare üzerine geldiğinde hafif bir arka plan belirir */
 }
 .oneri-satiri.secili { /* Yukarı/aşağı ok tuşlarıyla o an klavyeden seçili olan satır, fare üzerindeymiş gibi vurgulanır */
-    background-color: var(--zemin-3);
-    outline: 1px solid var(--vurgu, var(--metin-soluk)); /* Tema değişkeninde vurgu rengi yoksa soluk metin rengine düşülür */
-    outline-offset: -1px;
+    background-color: color-mix(in srgb, var(--vurgu-rengi) 16%, var(--zemin-3)); /* Klavye seçimi, sadece hover ile karıştırılmasın diye vurgu renginden de bir pay alır */
+}
+.oneri-simge {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    opacity: 0.75; /* İkon, metnin önüne geçmesin diye hafif soluk tutulur */
+}
+.oneri-metinler {
+    min-width: 0; /* Flex kapsayıcı içinde, uzun metnin ellipsis ile kırpılabilmesi için gerekli */
+    flex: 1;
 }
 .oneri-baslik {
     font-size: 13px; /* Başlığın yazı boyutu */
@@ -898,10 +949,11 @@ body.oneri-sayfasi {
     font-size: 11px; /* Adresin yazı boyutu, başlıktan daha küçük */
     color: var(--metin-soluk); /* İkincil bilgi olduğu için soluk renkte gösterilir */
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; /* Taşan adres metni kırpılır */
+    margin-top: 1px;
 }
 .oneri-eslesme { /* Önerilerde, kullanıcının o an yazdığı sorguyla eşleşen kısım */
     background: none; /* <mark>'ın varsayılan sarı arka planı yerine, sadece renk/kalınlıkla vurgulanır */
-    color: inherit;
+    color: var(--vurgu-rengi); /* Eşleşen kısım artık vurgu renginde, taranması daha kolay */
     font-weight: 700;
 }
 

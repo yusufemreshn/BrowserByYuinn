@@ -567,11 +567,25 @@ function yerImiCubugunuCiz(liste) {
         const oge = document.createElement("div");
         oge.className = "yerimi-ogesi";
         oge.title = kayit.baslik || kayit.adres;
-        const favicon = document.createElement("div");
-        favicon.className = "yerimi-favicon";
+
+        const yerTutucu = document.createElement("div"); // Gerçek site ikonu bulunamazsa gösterilecek, vurgu renginden türetilen yedek kutu
+        yerTutucu.className = "yerimi-favicon yerimi-favicon-yertutucu";
+
+        let siteHostu = ""; // Google favicon servisine gönderilecek, yer iminin adresinden ayıklanan alan adı
+        try { siteHostu = new URL(kayit.adres).hostname; } catch (hata) { siteHostu = ""; }
+
+        if (siteHostu) { // Alan adı ayıklanabildiyse, yeni sekme sayfasındaki hızlı erişim kutularıyla aynı yöntemle gerçek site ikonu denenir
+            const ikonOgesi = document.createElement("img");
+            ikonOgesi.className = "yerimi-favicon";
+            ikonOgesi.src = "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(siteHostu) + "&sz=32";
+            ikonOgesi.onerror = function () { ikonOgesi.replaceWith(yerTutucu); }; // İkon hiç bulunamazsa, yedek renkli kutu onun yerine konur
+            oge.appendChild(ikonOgesi);
+        } else {
+            oge.appendChild(yerTutucu);
+        }
+
         const baslik = document.createElement("span");
         baslik.textContent = kayit.baslik || kayit.adres;
-        oge.appendChild(favicon);
         oge.appendChild(baslik);
         oge.addEventListener("click", function (olay) {
             olay.stopPropagation();

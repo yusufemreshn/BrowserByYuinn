@@ -72,6 +72,13 @@ window.chrome.webview.addEventListener("message", function (olay) {
             return;
         }
 
+        const simgeOgesi = document.createElement("div"); // Satırın solundaki küçük küre ikonu, bu önerinin bir web adresi olduğunu görsel olarak belirtir
+        simgeOgesi.className = "oneri-simge";
+        simgeOgesi.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6.3"/><path d="M1.7 8h12.6M8 1.7c2.1 2.3 2.1 10.3 0 12.6M8 1.7c-2.1 2.3-2.1 10.3 0 12.6"/></svg>';
+
+        const metinlerOgesi = document.createElement("div");
+        metinlerOgesi.className = "oneri-metinler";
+
         const baslikOgesi = document.createElement("div");
         baslikOgesi.className = "oneri-baslik";
         vurgulananMetniEkle(baslikOgesi, kayit.title || kayit.address, sorguKucuk);
@@ -80,8 +87,10 @@ window.chrome.webview.addEventListener("message", function (olay) {
         adresOgesi.className = "oneri-adres";
         vurgulananMetniEkle(adresOgesi, kayit.address, sorguKucuk);
 
-        satir.appendChild(baslikOgesi);
-        satir.appendChild(adresOgesi);
+        metinlerOgesi.appendChild(baslikOgesi);
+        metinlerOgesi.appendChild(adresOgesi);
+        satir.appendChild(simgeOgesi);
+        satir.appendChild(metinlerOgesi);
         satir.addEventListener("click", function () {
             window.chrome.webview.postMessage("addresssuggestion_choice|" + kayit.address);
         });

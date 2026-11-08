@@ -3888,8 +3888,28 @@ void BrowserWindow::AdresOnerileriniGosterVeGonder(const std::wstring& mesaj)
     RECT istemciAlani;
     GetClientRect(m_pencere, &istemciAlani);
     int yukseklik = toplamSatirSayisi * OneriPaneliSatirYuksekligi + 8;
+    ust += 6; // Adres çubuğunun tam dibine yapışık değil, hafifçe ayrık, kendi başına süzülen bir kart gibi görünsün diye küçük bir boşluk bırakılır
     RECT oneriAlani = { sol, ust, sol + max(200, genislik), min(istemciAlani.bottom, ust + yukseklik) };
     m_oneriDenetleyici->put_Bounds(oneriAlani);
+
+    // Panelin GERÇEK alt penceresi, her gösterimde yeniden aranır (tutamak önceden saklanmaz): WebView2'nin aynı ana pencere altındaki toolbar/sekme/menü gibi diğer alt pencerelerinden,
+    // konumu/boyutu o an put_Bounds ile verilen oneriAlani ile birebir eşleşen aday seçilerek ayırt edilir (menü panelindeki MenuPenceresiAra ile aynı yöntem)
+    RECT oneriAlaniEkranKoordinati = oneriAlani;
+    MapWindowPoints(m_pencere, nullptr, reinterpret_cast<POINT*>(&oneriAlaniEkranKoordinati), 2);
+    MenuPenceresiAramaBaglami oneriPenceresiBaglami;
+    oneriPenceresiBaglami.hedefAlaniEkranKoordinati = oneriAlaniEkranKoordinati;
+    EnumChildWindows(m_pencere, MenuPenceresiAra, reinterpret_cast<LPARAM>(&oneriPenceresiBaglami));
+    if (oneriPenceresiBaglami.bulunanPencere != nullptr)
+    {
+        SetWindowPos(oneriPenceresiBaglami.bulunanPencere, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE); // Sonradan açılan sekmelerin WebView'i panelin üzerini örtmesin diye Z sırası öne alınır
+
+        UINT dpi = GetDpiForWindow(m_pencere); // Panelin gerçek pencere sınırı da CSS'teki border-radius ile aynı yarıçapta kırpılır, yoksa köşelerde eski köşeli pencere görünmeye devam eder (bkz. MenuPaneliKoseleriniYuvarlaYap)
+        int yaricap = MulDiv(10, static_cast<int>(dpi), 96) * 2;
+        int paneliGenislik = oneriAlani.right - oneriAlani.left;
+        int paneliYukseklik = oneriAlani.bottom - oneriAlani.top;
+        HRGN bolge = CreateRoundRectRgn(0, 0, paneliGenislik + 1, paneliYukseklik + 1, yaricap, yaricap);
+        SetWindowRgn(oneriPenceresiBaglami.bulunanPencere, bolge, TRUE);
+    }
 
     std::wstring onerilerJson = L"["; // Öneri listesi, bir JSON dizisi olarak hazırlanır
     bool ilkGirdiYazildiMi = false;

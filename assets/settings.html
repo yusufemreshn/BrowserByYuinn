@@ -17,8 +17,8 @@
                     <circle cx="11" cy="11" r="7"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input id="genel-arama" type="text" placeholder="Ayarlarda ara…" autocomplete="off" /> <!-- Tek, paylaşılan arama kutusu, aktif kategoriye göre doğru listeyi süzer -->
-                <button id="arama-temizle" type="button" title="Aramayı temizle">✕</button> <!-- Arama kutusunda metin varken beliren küçük temizleme düğmesi -->
+                <input id="genel-arama" type="text" placeholder="Ayarlarda ara…" autocomplete="off" aria-label="Ayarlarda ara" /> <!-- Tek, paylaşılan arama kutusu, aktif kategoriye göre doğru listeyi süzer -->
+                <button id="arama-temizle" type="button" title="Aramayı temizle" aria-label="Aramayı temizle">✕</button> <!-- Arama kutusunda metin varken beliren küçük temizleme düğmesi -->
             </div>
 
             <div id="kategori-menu"> <!-- Kategoriler arasında geçiş yapan sekme (chip) grubu -->
@@ -58,7 +58,7 @@
                             <div class="ayar-baslik">Ana sayfa adresi</div>
                             <div class="ayar-aciklama">Yeni bir pencere açtığınızda yüklenecek adres</div>
                         </div>
-                        <input id="girdi-ana-sayfa" type="text" placeholder="https://www.google.com" />
+                        <input id="girdi-ana-sayfa" type="url" inputmode="url" placeholder="https://www.google.com…" autocomplete="url" aria-label="Ana sayfa adresi" />
                     </div>
                     <div class="ayar-satiri">
                         <div class="ayar-metin">
@@ -73,7 +73,7 @@
                             <div class="ayar-aciklama">Her profilin kendi ayrı geçmişi, yer imleri, şifreleri ve gezinme verisi olur. Profil değiştirmek, programı yeniden başlatır.</div>
                         </div>
                         <div id="profil-ekle-form">
-                            <input id="girdi-yeni-profil-adi" type="text" placeholder="Yeni profil adı" />
+                            <input id="girdi-yeni-profil-adi" type="text" placeholder="Yeni profil adı" autocomplete="off" aria-label="Yeni profil adı" />
                             <button id="buton-yeni-profil-olustur">Oluştur ve Geç</button>
                         </div>
                     </div>
@@ -134,13 +134,13 @@
                             <div class="ayar-aciklama">Renk ve stil ön ayarlarından birini seçin</div>
                         </div>
                         <div class="presetler" id="preset-secenekleri">
-                            <div class="preset-karti" data-renk="#3b82f6" data-radius="orta" data-mod="koyu">
+                            <div class="preset-karti" data-renk="#3b82f6" data-radius="orta" data-mod="koyu" role="button" tabindex="0" aria-label="Gece hazır teması">
                                 <span class="preset-nokta" style="background:#3b82f6"></span><span class="preset-ad">Gece</span>
                             </div>
-                            <div class="preset-karti" data-renk="#14b8a6" data-radius="yuvarlak" data-mod="koyu">
+                            <div class="preset-karti" data-renk="#14b8a6" data-radius="yuvarlak" data-mod="koyu" role="button" tabindex="0" aria-label="Okyanus hazır teması">
                                 <span class="preset-nokta" style="background:#14b8a6"></span><span class="preset-ad">Okyanus</span>
                             </div>
-                            <div class="preset-karti" data-renk="#6b7280" data-radius="kesik" data-mod="acik">
+                            <div class="preset-karti" data-renk="#6b7280" data-radius="kesik" data-mod="acik" role="button" tabindex="0" aria-label="Minimal hazır teması">
                                 <span class="preset-nokta" style="background:#6b7280"></span><span class="preset-ad">Minimal</span>
                             </div>
                         </div>
@@ -272,10 +272,10 @@
                             <div class="ayar-aciklama">Şifreleriniz, Windows'un kendi şifreleme sistemiyle korunur, görüntülemeden önce Windows şifrenizi girmeniz istenir</div>
                         </div>
                         <div id="sifre-ekle-form">
-                            <input id="girdi-site" type="text" placeholder="Site (örnek.com)" />
-                            <input id="girdi-kullanici" type="text" placeholder="Kullanıcı adı" />
-                            <input id="girdi-sifre" type="password" placeholder="Şifre" />
-                            <button id="buton-sifre-uret" type="button" title="Güçlü, rastgele bir şifre üretir">Üret</button>
+                            <input id="girdi-site" type="url" inputmode="url" placeholder="Site (örnek.com)…" autocomplete="url" aria-label="Site adresi" />
+                            <input id="girdi-kullanici" type="text" placeholder="Kullanıcı adı" autocomplete="off" spellcheck="false" aria-label="Kullanıcı adı" />
+                            <input id="girdi-sifre" type="password" placeholder="Şifre" autocomplete="new-password" spellcheck="false" aria-label="Şifre" />
+                            <button id="buton-sifre-uret" type="button" title="Güçlü, rastgele bir şifre üretir" aria-label="Güçlü, rastgele bir şifre üret">Üret</button>
                             <button id="buton-sifre-ekle">Ekle</button>
                         </div>
                     </div>
@@ -291,10 +291,10 @@
                             <div class="ayar-aciklama">Sayfalara otomatik yazılmaz, formlara kopyalamanız için saklanır</div>
                         </div>
                         <div id="profil-form">
-                            <input id="girdi-profil-adsoyad" type="text" placeholder="Ad Soyad" />
-                            <input id="girdi-profil-eposta" type="text" placeholder="E-posta" />
-                            <input id="girdi-profil-telefon" type="text" placeholder="Telefon" />
-                            <input id="girdi-profil-adres" type="text" placeholder="Adres" />
+                            <input id="girdi-profil-adsoyad" type="text" placeholder="Ad Soyad" autocomplete="name" aria-label="Ad Soyad" />
+                            <input id="girdi-profil-eposta" type="email" placeholder="E-posta" autocomplete="email" spellcheck="false" aria-label="E-posta" />
+                            <input id="girdi-profil-telefon" type="tel" inputmode="tel" placeholder="Telefon" autocomplete="tel" aria-label="Telefon" />
+                            <input id="girdi-profil-adres" type="text" placeholder="Adres" autocomplete="street-address" aria-label="Adres" />
                             <button id="buton-profil-kaydet">Kaydet</button>
                         </div>
                     </div>
@@ -307,9 +307,9 @@
                             <div class="ayar-aciklama">Kart numaranız, şifreleriniz gibi Windows'un kendi şifreleme sistemiyle korunur, görüntülemeden önce Windows şifrenizi girmeniz istenir</div>
                         </div>
                         <div id="kart-ekle-form">
-                            <input id="girdi-kart-sahibi" type="text" placeholder="Kart üzerindeki ad" />
-                            <input id="girdi-kart-numara" type="text" placeholder="Kart numarası" inputmode="numeric" />
-                            <input id="girdi-kart-tarih" type="text" placeholder="AA/YY" />
+                            <input id="girdi-kart-sahibi" type="text" placeholder="Kart üzerindeki ad" autocomplete="cc-name" aria-label="Kart üzerindeki ad" />
+                            <input id="girdi-kart-numara" type="text" placeholder="Kart numarası" inputmode="numeric" autocomplete="cc-number" spellcheck="false" aria-label="Kart numarası" />
+                            <input id="girdi-kart-tarih" type="text" placeholder="AA/YY…" autocomplete="cc-exp" spellcheck="false" aria-label="Son kullanma tarihi" />
                             <button id="buton-kart-ekle">Ekle</button>
                         </div>
                     </div>
@@ -382,7 +382,7 @@
                             <div class="ayar-aciklama">Bu siteler, hem çıkışta otomatik temizlemeden hem de yukarıdaki manuel geçmiş temizliğinden her zaman muaf tutulur</div>
                         </div>
                         <div id="haric-tutma-form">
-                            <input id="girdi-haric-site" type="text" placeholder="https://ornek.com" />
+                            <input id="girdi-haric-site" type="url" inputmode="url" placeholder="https://ornek.com…" autocomplete="url" aria-label="Hariç tutulacak site adresi" />
                             <button id="buton-haric-site-ekle">Ekle</button>
                         </div>
                     </div>
@@ -459,7 +459,7 @@
                             <div class="ayar-aciklama">Resmi desteklenen bir yöntem değildir, bazı uzantılar (özellikle Manifest V3 service worker gerektirenler) çalışmayabilir. Uzantının mağaza sayfasının adresini yapıştırın.</div>
                         </div>
                         <div id="magaza-uzanti-form">
-                            <input id="girdi-magaza-adres" type="text" placeholder="https://chromewebstore.google.com/detail/.../abcdefgh..." />
+                            <input id="girdi-magaza-adres" type="url" inputmode="url" placeholder="https://chromewebstore.google.com/detail/.../abcdefgh…" autocomplete="url" aria-label="Uzantı mağaza adresi" />
                             <button id="buton-magaza-uzanti-yukle">Yükle</button>
                         </div>
                         <div id="magaza-uzanti-durum" class="ayar-aciklama"></div>
@@ -472,31 +472,31 @@
                 <div class="ayarlar-karti">
                     <div class="ayar-satiri">
                         <div class="ayar-metin"><div class="ayar-baslik">Yeni sekme</div></div>
-                        <input class="girdi-kisayol" id="kisayol-yenisekme" maxlength="1" />
+                        <input class="girdi-kisayol" id="kisayol-yenisekme" maxlength="1" autocomplete="off" spellcheck="false" aria-label="Yeni sekme kısayol tuşu" />
                     </div>
                     <div class="ayar-satiri">
                         <div class="ayar-metin"><div class="ayar-baslik">Sekmeyi kapat</div></div>
-                        <input class="girdi-kisayol" id="kisayol-sekmekapat" maxlength="1" />
+                        <input class="girdi-kisayol" id="kisayol-sekmekapat" maxlength="1" autocomplete="off" spellcheck="false" aria-label="Sekmeyi kapat kısayol tuşu" />
                     </div>
                     <div class="ayar-satiri">
                         <div class="ayar-metin"><div class="ayar-baslik">Sekmeyi çoğalt</div></div>
-                        <input class="girdi-kisayol" id="kisayol-cogalt" maxlength="1" />
+                        <input class="girdi-kisayol" id="kisayol-cogalt" maxlength="1" autocomplete="off" spellcheck="false" aria-label="Sekmeyi çoğalt kısayol tuşu" />
                     </div>
                     <div class="ayar-satiri">
                         <div class="ayar-metin"><div class="ayar-baslik">Yazdır / PDF kaydet</div></div>
-                        <input class="girdi-kisayol" id="kisayol-yazdir" maxlength="1" />
+                        <input class="girdi-kisayol" id="kisayol-yazdir" maxlength="1" autocomplete="off" spellcheck="false" aria-label="Yazdır / PDF kaydet kısayol tuşu" />
                     </div>
                     <div class="ayar-satiri">
                         <div class="ayar-metin"><div class="ayar-baslik">Sayfada bul</div></div>
-                        <input class="girdi-kisayol" id="kisayol-sayfadabul" maxlength="1" />
+                        <input class="girdi-kisayol" id="kisayol-sayfadabul" maxlength="1" autocomplete="off" spellcheck="false" aria-label="Sayfada bul kısayol tuşu" />
                     </div>
                     <div class="ayar-satiri">
                         <div class="ayar-metin"><div class="ayar-baslik">Yenile</div></div>
-                        <input class="girdi-kisayol" id="kisayol-yenile" maxlength="1" />
+                        <input class="girdi-kisayol" id="kisayol-yenile" maxlength="1" autocomplete="off" spellcheck="false" aria-label="Yenile kısayol tuşu" />
                     </div>
                     <div class="ayar-satiri">
                         <div class="ayar-metin"><div class="ayar-baslik">Adres çubuğuna odaklan</div></div>
-                        <input class="girdi-kisayol" id="kisayol-adres" maxlength="1" />
+                        <input class="girdi-kisayol" id="kisayol-adres" maxlength="1" autocomplete="off" spellcheck="false" aria-label="Adres çubuğuna odaklan kısayol tuşu" />
                     </div>
                     <div class="ayar-satiri">
                         <div class="ayar-metin">

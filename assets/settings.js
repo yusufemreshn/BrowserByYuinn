@@ -4,6 +4,16 @@
 
 document.title = "Ayarlar"; // Sekme şeridinde bu sayfanın başlığı "Ayarlar" olarak görünsün diye sayfa başlığı burada ayarlanır, çünkü bu sayfanın kendi <title> etiketi sekme şeridine otomatik yansımaz
 
+// <button> olmayıp sadece "click" dinleyen öğeler (renk noktası, galeri karesi, hazır tema kartı, okuma listesi satırı gibi) role="button" + tabindex="0" ile işaretlenir,
+// bu tek genel dinleyici ise Enter/Boşluk basıldığında bu tür her öğe için fare tıklamasıyla aynı "click" olayını tetikler, böylece klavyeyle de kullanılabilir olurlar
+document.addEventListener("keydown", function (olay) {
+    if (olay.key !== "Enter" && olay.key !== " ") { return; }
+    const hedef = olay.target.closest('[role="button"]');
+    if (!hedef) { return; }
+    olay.preventDefault();
+    hedef.click();
+});
+
 const kategoriButonlari = document.querySelectorAll(".kategori"); // Sol menüdeki tüm kategori butonları seçilir
 const panelOgeleri = document.querySelectorAll(".panel"); // Sağdaki tüm panel bölümleri seçilir
 
@@ -140,6 +150,9 @@ renkSecenekleri.forEach(function (renk) { // Her hazır renk için bir nokta olu
     nokta.className = "renk-karesi"; // Renk noktasına stil sınıfı atanır
     nokta.style.backgroundColor = renk; // Noktanın arka plan rengi, bu seçeneğin rengine ayarlanır
     nokta.dataset.renk = renk; // Noktanın hangi renge karşılık geldiği, bir veri özelliğinde saklanır
+    nokta.setAttribute("role", "button"); // Bu bir <div> olduğu için, ekran okuyuculara ve klavye gezinmesine tıklanabilir olduğu ayrıca bildirilir
+    nokta.setAttribute("tabindex", "0"); // Tab tuşuyla da odaklanılabilir hale gelir
+    nokta.setAttribute("aria-label", "Vurgu rengi: " + renk); // İkon/renk tek başına anlam taşımadığı için metinsel bir açıklama eklenir
     nokta.addEventListener("click", function () { // Bu noktaya tıklandığında
         seciliVurguRengi = renk; // Seçili renk güncellenir
         temaKaydet(); // Yeni tema, native tarafa kaydedilir
@@ -299,7 +312,11 @@ function gecmisListesiniCiz() {
 
         const anaMetin = document.createElement("div"); // Başlık ve adresi gösterecek metin öğesi
         anaMetin.className = "ana-metin"; // Stil sınıfı atanır
-        anaMetin.innerHTML = kayit.baslik + "<div class=\"ikincil-metin\">" + kayit.adres + "</div>"; // Başlık ve adres, metnin içine yazılır
+        anaMetin.textContent = kayit.baslik; // Ziyaret edilen sayfanın başlığı, innerHTML yerine textContent ile yazılır, kötü niyetli bir sayfa başlığının HTML/script olarak çalışmasını engeller
+        const gecmisIkincilMetin = document.createElement("div");
+        gecmisIkincilMetin.className = "ikincil-metin";
+        gecmisIkincilMetin.textContent = kayit.adres;
+        anaMetin.appendChild(gecmisIkincilMetin);
 
         const silButonu = document.createElement("button"); // Bu kayda özel "Sil" butonu oluşturulur
         silButonu.textContent = "Sil"; // Buton metni ayarlanır
@@ -330,7 +347,19 @@ function hataListesiniCiz() {
     filtrelenmis.forEach(function (kayit) { // Her hata kaydı için
         const satir = document.createElement("div"); // Yeni bir satır öğesi oluşturulur
         satir.className = "liste-satiri"; // Satıra stil sınıfı atanır
-        satir.innerHTML = "<div class=\"ana-metin\"><span class=\"hata-kodu\">" + kayit.kod + "</span> — " + kayit.aciklama + "<div class=\"ikincil-metin\">" + kayit.tarih + " " + kayit.saat + " · " + kayit.mesaj + "</div></div>"; // Kod, açıklama, tarih/saat ve ek mesaj satırın içine yazılır
+
+        const hataAnaMetin = document.createElement("div"); // Kod ve açıklamayı gösterecek metin öğesi, innerHTML yerine textContent ile dolduruluyor
+        hataAnaMetin.className = "ana-metin";
+        const hataKoduSpani = document.createElement("span");
+        hataKoduSpani.className = "hata-kodu";
+        hataKoduSpani.textContent = kayit.kod;
+        hataAnaMetin.appendChild(hataKoduSpani);
+        hataAnaMetin.appendChild(document.createTextNode(" — " + kayit.aciklama));
+        const hataIkincilMetin = document.createElement("div");
+        hataIkincilMetin.className = "ikincil-metin";
+        hataIkincilMetin.textContent = kayit.tarih + " " + kayit.saat + " · " + kayit.mesaj;
+        hataAnaMetin.appendChild(hataIkincilMetin);
+        satir.appendChild(hataAnaMetin);
         kapsayici.appendChild(satir); // Hazırlanan satır, listeye eklenir
     });
 
@@ -495,12 +524,16 @@ function arkaplanGalerisiniCiz(resimler) {
         const kare = document.createElement("div");
         kare.className = "arkaplan-secenegi";
         kare.title = resim.name;
+        kare.setAttribute("role", "button"); // Bu bir <div> olduğu için, ekran okuyuculara ve klavye gezinmesine tıklanabilir olduğu ayrıca bildirilir
+        kare.setAttribute("tabindex", "0"); // Tab tuşuyla da odaklanılabilir hale gelir
+        kare.setAttribute("aria-label", "Arka plan resmi: " + resim.name); // Fotoğrafın kendisi anlam taşımadığı için dosya adı açıklama olarak eklenir
         if (sonBilinenArkaPlanYolu && sonBilinenArkaPlanYolu.split("\\").pop() === resim.name) {
             kare.classList.add("secili"); // Şu anda kullanılan fotoğraf, galeri içinde vurgulanır
         }
         const img = document.createElement("img");
         img.src = "https://tarayici-resimler.local/" + resim.thumb.split("/").map(encodeURIComponent).join("/"); // Küçük önizleme, "resimler" klasörüne eşlenen sahte adresten (".thumbs/..." alt yolu dahil) yüklenir
         img.loading = "lazy";
+        img.alt = ""; // Karenin kendi aria-label'ı zaten açıklıyor, resim dekoratif kabul edilip ekran okuyucuya ayrıca okutulmaz
         kare.appendChild(img);
         kare.addEventListener("click", function () {
             window.chrome.webview.postMessage("set_newtab_background_frompath|" + resim.name); // Tıklanınca her zaman orijinal (tam kalite) dosya arka plan olarak seçilir, önizleme sadece galeri için vardır
@@ -618,7 +651,11 @@ function kartListesiniCiz(liste) {
         const anaMetin = document.createElement("div");
         anaMetin.className = "ana-metin";
         const gosterilecekNumara = gosterilenKartlar[anahtar];
-        anaMetin.innerHTML = kayit.kartSahibi + " (" + (kayit.sonKullanma || "—") + ")<div class=\"ikincil-metin\">" + (gosterilecekNumara ? ("Numara: " + gosterilecekNumara) : "•••• •••• •••• ••••") + "</div>";
+        anaMetin.textContent = kayit.kartSahibi + " (" + (kayit.sonKullanma || "—") + ")"; // innerHTML yerine textContent kullanılır
+        const kartIkincilMetin = document.createElement("div");
+        kartIkincilMetin.className = "ikincil-metin";
+        kartIkincilMetin.textContent = gosterilecekNumara ? ("Numara: " + gosterilecekNumara) : "•••• •••• •••• ••••";
+        anaMetin.appendChild(kartIkincilMetin);
 
         const gosterButonu = document.createElement("button");
         gosterButonu.textContent = gosterilecekNumara ? "Gizle" : "Göster";
@@ -672,7 +709,11 @@ function sifreListesiniCiz(liste) {
         const anaMetin = document.createElement("div"); // Site ve kullanıcı adını gösterecek metin öğesi
         anaMetin.className = "ana-metin"; // Stil sınıfı atanır
         const gosterilecekSifre = gosterilenSifreler[anahtar]; // Bu kayıt daha önce çözülüp gösterildiyse, değeri alınır
-        anaMetin.innerHTML = kayit.site + " (" + kayit.username + ")<div class=\"ikincil-metin\">" + (gosterilecekSifre ? ("Şifre: " + gosterilecekSifre) : "••••••••") + "</div>"; // Şifre gösterilmediyse noktalarla temsil edilir
+        anaMetin.textContent = kayit.site + " (" + kayit.username + ")"; // innerHTML yerine textContent kullanılır
+        const sifreIkincilMetin = document.createElement("div");
+        sifreIkincilMetin.className = "ikincil-metin";
+        sifreIkincilMetin.textContent = gosterilecekSifre ? ("Şifre: " + gosterilecekSifre) : "••••••••"; // Şifre gösterilmediyse noktalarla temsil edilir
+        anaMetin.appendChild(sifreIkincilMetin);
 
         const gosterButonu = document.createElement("button"); // "Göster" butonu oluşturulur
         gosterButonu.textContent = gosterilecekSifre ? "Gizle" : "Göster"; // Buton metni, şifrenin gösterilip gösterilmediğine göre değişir
@@ -731,7 +772,11 @@ function izinListesiniCiz(liste) {
         anaMetin.className = "ana-metin"; // Stil sınıfı atanır
         const turAdi = izinTuruGorunenAdlari[kayit.tur] || kayit.tur; // Türün Türkçe adı bulunur, tanınmayan bir türse olduğu gibi gösterilir
         const kararMetni = kayit.izinVerildi ? "İzin verildi" : "Engellendi"; // Kararın okunabilir hali
-        anaMetin.innerHTML = kayit.kaynak + "<div class=\"ikincil-metin\">" + turAdi + " · " + kararMetni + "</div>"; // Kaynak ve karar, satırın içine yazılır
+        anaMetin.textContent = kayit.kaynak; // innerHTML yerine textContent kullanılır
+        const izinIkincilMetin = document.createElement("div");
+        izinIkincilMetin.className = "ikincil-metin";
+        izinIkincilMetin.textContent = turAdi + " · " + kararMetni;
+        anaMetin.appendChild(izinIkincilMetin);
 
         const kaldirButonu = document.createElement("button"); // "Kaldır" butonu oluşturulur
         kaldirButonu.textContent = "Kaldır"; // Buton metni ayarlanır
@@ -771,10 +816,27 @@ function yerimleriListesiniCiz() {
 
         const anaMetin = document.createElement("div");
         anaMetin.className = "ana-metin";
-        anaMetin.innerHTML = kayit.baslik + "<div class=\"ikincil-metin\">" + kayit.adres + (kayit.klasor ? " · 📁 " + kayit.klasor : "") + "</div>";
+        anaMetin.textContent = kayit.baslik; // innerHTML yerine textContent kullanılır
+        const yerImiIkincilMetin = document.createElement("div");
+        yerImiIkincilMetin.className = "ikincil-metin";
+        yerImiIkincilMetin.textContent = kayit.adres + (kayit.klasor ? " · 📁 " + kayit.klasor : "");
+        anaMetin.appendChild(yerImiIkincilMetin);
 
         const klasorSecici = document.createElement("select"); // Yer iminin hangi klasörde olduğunu gösteren ve değiştiren seçim kutusu
-        klasorSecici.innerHTML = "<option value=\"\">Klasörsüz</option>" + mevcutKlasorler.map(function (k) { return "<option value=\"" + k + "\">" + k + "</option>"; }).join("") + "<option value=\"__yeni__\">+ Yeni klasör…</option>";
+        const klasorsuzSecenegi = document.createElement("option"); // Seçenekler, innerHTML yerine her biri ayrı bir <option> olarak oluşturulur, klasör adı kullanıcı tarafından serbestçe yazılabildiği için metin olarak kalmalı
+        klasorsuzSecenegi.value = "";
+        klasorsuzSecenegi.textContent = "Klasörsüz";
+        klasorSecici.appendChild(klasorsuzSecenegi);
+        mevcutKlasorler.forEach(function (k) {
+            const secenek = document.createElement("option");
+            secenek.value = k;
+            secenek.textContent = k;
+            klasorSecici.appendChild(secenek);
+        });
+        const yeniKlasorSecenegi = document.createElement("option");
+        yeniKlasorSecenegi.value = "__yeni__";
+        yeniKlasorSecenegi.textContent = "+ Yeni klasör…";
+        klasorSecici.appendChild(yeniKlasorSecenegi);
         klasorSecici.value = kayit.klasor || "";
         klasorSecici.addEventListener("change", function () {
             let yeniKlasor = klasorSecici.value;
@@ -844,7 +906,13 @@ function okumaListesiniCiz() {
         const anaMetin = document.createElement("div");
         anaMetin.className = "ana-metin";
         anaMetin.style.cursor = "pointer";
-        anaMetin.innerHTML = kayit.baslik + "<div class=\"ikincil-metin\">" + kayit.adres + "</div>";
+        anaMetin.setAttribute("role", "button"); // Bu bir <div> olduğu için, ekran okuyuculara ve klavye gezinmesine tıklanabilir (sayfayı açan) olduğu ayrıca bildirilir
+        anaMetin.setAttribute("tabindex", "0"); // Tab tuşuyla da odaklanılabilir hale gelir
+        anaMetin.textContent = kayit.baslik; // Ziyaret edilen sayfadan gelen başlık, innerHTML yerine textContent ile yazılır, kötü niyetli bir sayfa başlığının HTML/script olarak çalışmasını engeller
+        const ikincilMetin = document.createElement("div");
+        ikincilMetin.className = "ikincil-metin";
+        ikincilMetin.textContent = kayit.adres;
+        anaMetin.appendChild(ikincilMetin);
         anaMetin.addEventListener("click", function () {
             window.chrome.webview.postMessage("openbookmarkbar|" + kayit.adres); // Aynı doğrudan gezinme komutu, okuma listesi öğeleri için de kullanılır
         });
@@ -891,7 +959,13 @@ function uzantilarListesiniCiz(liste) {
     kapsayici.innerHTML = "";
 
     if (liste.length === 0) {
-        kapsayici.innerHTML = "<div class=\"liste-satiri\"><div class=\"ana-metin\">Henüz yüklü bir uzantı yok.</div></div>";
+        const bosSatir = document.createElement("div");
+        bosSatir.className = "liste-satiri";
+        const bosAnaMetin = document.createElement("div");
+        bosAnaMetin.className = "ana-metin";
+        bosAnaMetin.textContent = "Henüz yüklü bir uzantı yok.";
+        bosSatir.appendChild(bosAnaMetin);
+        kapsayici.appendChild(bosSatir);
         return;
     }
 
@@ -901,7 +975,11 @@ function uzantilarListesiniCiz(liste) {
 
         const anaMetin = document.createElement("div");
         anaMetin.className = "ana-metin";
-        anaMetin.innerHTML = kayit.name + "<div class=\"ikincil-metin\">" + (kayit.enabled ? "Etkin" : "Devre dışı") + "</div>";
+        anaMetin.textContent = kayit.name; // Uzantı adı, manifest.json'dan (dolayısıyla potansiyel olarak güvenilmeyen bir kaynaktan) geldiği için innerHTML yerine textContent kullanılır
+        const uzantiIkincilMetin = document.createElement("div");
+        uzantiIkincilMetin.className = "ikincil-metin";
+        uzantiIkincilMetin.textContent = kayit.enabled ? "Etkin" : "Devre dışı";
+        anaMetin.appendChild(uzantiIkincilMetin);
 
         const durumButonu = document.createElement("button");
         durumButonu.textContent = kayit.enabled ? "Devre Dışı Bırak" : "Etkinleştir";
@@ -941,7 +1019,11 @@ function indirmelerListesiniCiz(liste) {
 
         const anaMetin = document.createElement("div");
         anaMetin.className = "ana-metin";
-        anaMetin.innerHTML = kayit.name + "<div class=\"ikincil-metin\">" + (durumMetinleri[kayit.state] || kayit.state) + " · " + boyutMetniOlustur(kayit.received) + (kayit.total > 0 ? (" / " + boyutMetniOlustur(kayit.total) + " (" + yuzde + "%)") : "") + "</div>";
+        anaMetin.textContent = kayit.name; // İndirilen dosyanın adı, sunucunun (saldırganın) kontrolünde olabildiğinden innerHTML yerine textContent kullanılır
+        const indirmeIkincilMetin = document.createElement("div");
+        indirmeIkincilMetin.className = "ikincil-metin";
+        indirmeIkincilMetin.textContent = (durumMetinleri[kayit.state] || kayit.state) + " · " + boyutMetniOlustur(kayit.received) + (kayit.total > 0 ? (" / " + boyutMetniOlustur(kayit.total) + " (" + yuzde + "%)") : "");
+        anaMetin.appendChild(indirmeIkincilMetin);
         satir.appendChild(anaMetin);
 
         if (kayit.state === "indiriliyor") {
@@ -976,7 +1058,10 @@ function indirmelerListesiniCiz(liste) {
     if (liste.length === 0) {
         const bosSatir = document.createElement("div");
         bosSatir.className = "liste-satiri";
-        bosSatir.innerHTML = "<div class=\"ana-metin\">Bu oturumda henüz bir indirme yapılmadı.</div>";
+        const bosAnaMetin = document.createElement("div");
+        bosAnaMetin.className = "ana-metin";
+        bosAnaMetin.textContent = "Bu oturumda henüz bir indirme yapılmadı.";
+        bosSatir.appendChild(bosAnaMetin);
         kapsayici.appendChild(bosSatir);
     }
 
